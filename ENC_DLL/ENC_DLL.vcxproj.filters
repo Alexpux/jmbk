@@ -1,0 +1,149 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="头文件\Crypto">
+      <UniqueIdentifier>{9ee171cf-3cac-4622-8829-80ab8ac07d56}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\helper">
+      <UniqueIdentifier>{9ee12b8e-0f16-44af-9936-9ae07ffc03f9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\protocal">
+      <UniqueIdentifier>{8f57f1ff-a94a-4154-a5ad-d85ce2fb4af1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="源文件\Crypto">
+      <UniqueIdentifier>{0db7ca0a-1523-430d-9b4b-e73a8c89e9a5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\protocal">
+      <UniqueIdentifier>{6b74126f-659d-4bbe-90f7-e16bfd1efe7c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\helper">
+      <UniqueIdentifier>{f2d14bcb-ebf3-4e4d-997c-202139bf6519}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="libsenc.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="senc_cmd_frame.h">
+      <Filter>头文件\protocal</Filter>
+    </ClInclude>
+    <ClInclude Include="senc_dongleapi.h">
+      <Filter>头文件\protocal</Filter>
+    </ClInclude>
+    <ClInclude Include="senc_internalapi.h">
+      <Filter>头文件\protocal</Filter>
+    </ClInclude>
+    <ClInclude Include="senc_serialport.h">
+      <Filter>头文件\protocal</Filter>
+    </ClInclude>
+    <ClInclude Include="senc_usbapi.h">
+      <Filter>头文件\protocal</Filter>
+    </ClInclude>
+    <ClInclude Include="itoken.h">
+      <Filter>头文件\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="lock.h">
+      <Filter>头文件\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="openssl_locker.h">
+      <Filter>头文件\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="PtrConverter.h">
+      <Filter>头文件\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="senc_assist.h">
+      <Filter>头文件\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="senc_logger.h">
+      <Filter>头文件\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="senc_aes.h">
+      <Filter>头文件\Crypto</Filter>
+    </ClInclude>
+    <ClInclude Include="senc_crc.h">
+      <Filter>头文件\Crypto</Filter>
+    </ClInclude>
+    <ClInclude Include="senc_des.h">
+      <Filter>头文件\Crypto</Filter>
+    </ClInclude>
+    <ClInclude Include="senc_diffiehellman.h">
+      <Filter>头文件\Crypto</Filter>
+    </ClInclude>
+    <ClInclude Include="senc_rsa.h">
+      <Filter>头文件\Crypto</Filter>
+    </ClInclude>
+    <ClInclude Include="senc_error.h">
+      <Filter>头文件\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="devcacli.h">
+      <Filter>头文件\helper</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="senc_aes.cpp">
+      <Filter>源文件\Crypto</Filter>
+    </ClCompile>
+    <ClCompile Include="senc_internalapi.cpp">
+      <Filter>源文件\protocal</Filter>
+    </ClCompile>
+    <ClCompile Include="senc_usbapi.cpp">
+      <Filter>源文件\protocal</Filter>
+    </ClCompile>
+    <ClCompile Include="senc_diffiehellman.cpp">
+      <Filter>源文件\Crypto</Filter>
+    </ClCompile>
+    <ClCompile Include="senc_des.cpp">
+      <Filter>源文件\Crypto</Filter>
+    </ClCompile>
+    <ClCompile Include="senc_cmd_frame.cpp">
+      <Filter>源文件\protocal</Filter>
+    </ClCompile>
+    <ClCompile Include="senc_crc.cpp">
+      <Filter>源文件\Crypto</Filter>
+    </ClCompile>
+    <ClCompile Include="senc_dongleapi.cpp">
+      <Filter>源文件\protocal</Filter>
+    </ClCompile>
+    <ClCompile Include="libsenc.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Abandon.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="senc_rsa.cpp">
+      <Filter>源文件\Crypto</Filter>
+    </ClCompile>
+    <ClCompile Include="senc_serialport.cpp">
+      <Filter>源文件\protocal</Filter>
+    </ClCompile>
+    <ClCompile Include="senc_assist.cpp">
+      <Filter>源文件\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="openssl_locker.c">
+      <Filter>源文件\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="senc_logger.cpp">
+      <Filter>源文件\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="senc_error.cpp">
+      <Filter>源文件\helper</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="libsenc.def">
+      <Filter>头文件</Filter>
+    </None>
+  </ItemGroup>
+</Project>
