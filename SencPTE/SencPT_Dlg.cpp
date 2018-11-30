@@ -49,6 +49,9 @@ extern "C"
 #define		JMJ_CERT_PATH			"./证书/st.device.cer"		//加密板卡设备证书
 #define		JMJ_PRIKEY_PATH			"./证书/st.device.pri"		//加密机私钥
 
+#define DEFAULT_SM2_SIGN_USER_ID			"1234567812345678"
+#define DEFAULT_SM2_SIGN_USER_ID_LEN		16
+
 // IMPLEMENT_DYNAMIC(SencPT_Dlg, CDialogEx)
 
 //自定义写死数据
@@ -58,15 +61,30 @@ static unsigned char innerkey1[] =
 static unsigned char _seed[] =
 "\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11"
 "\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11";
-static unsigned char aes_key[] =
-"\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22";
-static unsigned char aes_iv[] =
-"\x33\x33\x33\x33\x33\x33\x33\x33\x33\x33\x33\x33\x33\x33\x33\x33";
+static unsigned char aes_key[] = {
+	0x54, 0x5D, 0xBA, 0x6B, 0xE5, 0xA2, 0x45, 0x40, 0xA1, 0xCE, 0x99, 0xC6, 0xFB, 0xED, 0xCC, 0xE8 };
+static unsigned char aes_iv[16] = {
+	0x3E, 0x62, 0xBB, 0x39, 0x1F, 0xDF, 0xDB, 0x2F, 0x33, 0x08, 0x71, 0x04, 0xEF, 0xC9, 0xB5, 0xF7};
+static unsigned char aes_iv2[16] = {
+	0x3E, 0x62, 0xBB, 0x39, 0x1F, 0xDF, 0xDB, 0x2F, 0x33, 0x08, 0x71, 0x04, 0xEF, 0xC9, 0xB5, 0xF7};
+static unsigned char aes_data[376] = {
+	0x20, 0x18, 0x11, 0x29, 0x20, 0xad, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+	0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 
+	0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 
+	0x78, 0x6e, 0xea, 0xed, 0x28, 0xd1, 0x60, 0x24, 0xd4, 0xa7, 0xb6, 0xb6, 0x75, 0xc8, 0x64, 0x54, 
+	0x10, 0xac, 0x30, 0xf9, 0xc8, 0x10, 0x27, 0x86, 0xef, 0x60, 0x16, 0x6c, 0xdb, 0xab, 0xff, 0x00, 
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	0x00, 0x02, 0x02, 0x00, 0x00, 0x01, 0x00, 0x00, 0x48, 0xc1, 0x24, 0x9f, 0x50, 0xae, 0x11, 0xd6, 
+	0xb0, 0x9f, 0x68, 0x18, 0xc1, 0xfd, 0x14, 0x17, 0xa2, 0x28, 0xa1, 0x07, 0x84, 0x90, 0xe3, 0x5e, 
+	0xbf, 0x42, 0x96, 0x87, 0xa5, 0xce, 0x22, 0x44, 0x3c, 0x58, 0x14, 0x89, 0x62, 0x02, 0xa5, 0x31, 
+	0xe5, 0x71, 0xd0, 0x65, 0xd4, 0x12, 0x79, 0x35, 0x01, 0x90, 0x47, 0xe3, 0x7d, 0xc1, 0x8a, 0x0f, 
+	0x46, 0xa8, 0x11, 0x26, 0x7b, 0x04, 0x09, 0xca };
+
 static unsigned char jmjpri[] =
-{ 0x56, 0x5D, 0xEB, 0x98, 0x44, 0xE5, 0x0C, 0xD7, 
-  0x06, 0x51, 0xE1, 0xF2, 0x05, 0xD2, 0x09, 0xDD, 
-  0xF5, 0xF1, 0x34, 0x9A, 0x63, 0x02, 0x14, 0x95,
-  0xC3, 0x0A, 0x91, 0x5B, 0xD6, 0x65, 0x4D, 0xFE };
+{ 0x78, 0x6E, 0xEA, 0xED, 0x28, 0xD1, 0x60, 0x24, 0xD4, 0xA7, 0xB6, 
+  0xB6, 0x75, 0xC8, 0x64, 0x54, 0x10, 0xAC, 0x30, 0xF9, 0xC8, 0x10, 
+  0x27, 0x86, 0xEF, 0x60, 0x16, 0x6C, 0xDB, 0xAB, 0xFF, 0x00 };
 
 unsigned char Pri[33] = { 0 };
 unsigned char Pub[66] = { 0x04 };
@@ -434,6 +452,79 @@ void CharStr2HexStr(const UCHAR* IN src, int IN srcl, char* OUT dest)
 	}
 }
 
+const UINT8 TAG_CLASS_CONTEXT = 0xA0;
+const UINT8 TAG_INTEGER = 0x02;
+const UINT8 TAG_BIT_STRING = 0x03;
+const UINT8 TAG_OCTET_STRING = 0x04;
+const UINT8 TAG_OID = 0x06;
+const UINT8 TAG_SEQUENCE = 0x30;
+
+UINT16 eccDerDecodeSignature(UINT8 *pu8DerSig, UINT16 u16DerSigLen, UINT8 *pu8Sig, UINT16 u16SigLen)
+{
+	UINT16 u16Index = 0;
+	UINT16 u16Slen = 0;
+
+	// check outer sequence
+	if (pu8DerSig[0] != TAG_SEQUENCE)
+		return 1;
+
+	if ((pu8DerSig[1] != u16DerSigLen - 2)
+		|| (pu8DerSig[1] != 4 + pu8DerSig[3] + pu8DerSig[4 + pu8DerSig[3] + 1]))
+		return 1;
+
+	// check integer r
+	if (pu8DerSig[2] != TAG_INTEGER)
+		return 1;
+
+	if ((pu8DerSig[4] != 0) && (pu8DerSig[3] > u16SigLen / 2))
+		return 1;
+
+	u16Index = 4;
+
+	if (pu8DerSig[3] == u16SigLen / 2 + 1)
+		u16Index++;
+
+	if (pu8DerSig[3] < u16SigLen / 2)
+	{
+		memset(pu8Sig, 0, u16SigLen / 2 - pu8DerSig[3]);
+		memcpy(pu8Sig + u16SigLen / 2 - pu8DerSig[3], pu8DerSig + u16Index, pu8DerSig[3]);
+
+		u16Index += pu8DerSig[3];
+	}
+	else
+	{
+		memcpy(pu8Sig, pu8DerSig + u16Index, u16SigLen / 2);
+
+		u16Index += u16SigLen / 2;
+	}
+
+	// check integer s
+	if (pu8DerSig[u16Index] != TAG_INTEGER)
+		return 1;
+
+	u16Slen = pu8DerSig[u16Index + 1];
+	if ((pu8DerSig[u16Index + 2] != 0) && (u16Slen > u16SigLen / 2))
+		return 1;
+
+	if (u16Slen == u16SigLen / 2 + 1)
+		u16Index++;
+
+	u16Index += 2;
+
+	if (u16Slen < u16SigLen / 2)
+	{
+		memset(pu8Sig + u16SigLen / 2, 0, u16SigLen / 2 - u16Slen);
+		memcpy(pu8Sig + u16SigLen - u16Slen, pu8DerSig + u16Index, u16Slen);
+	}
+	else
+	{
+		memcpy(pu8Sig + u16SigLen / 2, pu8DerSig + u16Index, u16SigLen / 2);
+	}
+
+	return 0;
+}
+
+
 //请求设备证书
 unsigned int request_dev_cert(unsigned int IN CsrLen,unsigned char* IN Csr,dcc_cert_resp* OUT Resp)
 {
@@ -474,7 +565,7 @@ int gen_pkg_for_device(_In_ ChipInitRequest ChipInitReq, _Out_ ChipInitCommand *
 	BIGNUM *prikey2 = NULL;
 	EC_POINT *pubkey2 = NULL;
 
-	int digest_srclen = 0;					//计算摘要源数据长度
+	int msgl = 0;					//计算摘要源数据长度
 	unsigned char digest[32] = { 0 };		//摘要
 	unsigned int digest_len = 32;			//摘要长度
 	unsigned char sign_ret[512] = { 0 };	//签名
@@ -543,7 +634,7 @@ int gen_pkg_for_device(_In_ ChipInitRequest ChipInitReq, _Out_ ChipInitCommand *
 	chip_init_cmd_inner.bits = PRIKEY_BITS_256;
 
 	// 2.2 使用加密机私钥签名
-#if 0 根据加密机设备证书和私钥文件获取加密机公钥和私钥
+#if 0  根据加密机设备证书和私钥文件获取加密机公钥和私钥
 	FILE* fp = fopen(JMJ_PRIKEY_PATH, "rb");
 	if (fp == NULL)
 		goto ERR_OUT;
@@ -568,33 +659,88 @@ int gen_pkg_for_device(_In_ ChipInitRequest ChipInitReq, _Out_ ChipInitCommand *
 	EC_KEY_set_public_key(eckey, pubkey);
 #endif 
 
+
 #if 1 自定义写死加密机公私钥
-	BN_hex2bn(&prikey, "565DEB9844E50CD70651E1F205D209DDF5F1349A63021495C30A915BD6654DFE");
+	BN_hex2bn(&prikey, "786EEAED28D16024D4A7B6B675C8645410AC30F9C8102786EF60166CDBABFF00");
 	EC_KEY_set_private_key(eckey, prikey);
-	pubkey = EC_POINT_hex2point(group, "040448376D36EB3A9D61322CBBF67F7EDD36C1D314C526CE5DF5E123997A145DB14724CD379374474AB87434E2324BCDB78E332CF842FA37CD0D9CC10C0E36C273", pubkey, NULL);
+	pubkey = EC_POINT_hex2point(group, "0409FB73A17DE326052270E6DBD8B79AD328894692F439BA718F8D24C9F447E26B7D465DDD8413743A36CFEC16BD425DB62E013A37C18B8B45F80EE95213B89EDC", pubkey, NULL);
 	EC_KEY_set_public_key(eckey, pubkey);
 #endif
 
-	digest_srclen = sizeof(ChipInitCommandInner)-sizeof(chip_init_cmd_inner.Signaute);
-	sm3((unsigned char*)&chip_init_cmd_inner, digest_srclen, digest);
-	ret = SM2_sign(1, digest, sizeof(digest), (unsigned char*)sign_ret, (unsigned int*)&sign_len, eckey);
+#if 1
+	msgl = sizeof(ChipInitCommandInner)-sizeof(chip_init_cmd_inner.Signaute);
+	ret = SM2_digest(
+		(unsigned char*)DEFAULT_SM2_SIGN_USER_ID,
+		DEFAULT_SM2_SIGN_USER_ID_LEN,
+		&chip_init_cmd_inner,
+		msgl,
+		digest,
+		&digest_len,
+		eckey);
+	if (ret != 1)
+	{
+		AfxMessageBox(_T("SM2_digest Failed:0x%08X\n", ret));
+		return 1;
+	}
+
+	ret = SM2_sign(1, digest, digest_len, (unsigned char*)sign_ret, (unsigned int*)&sign_len, eckey);
 	if (ret != 1)
 	{
 		AfxMessageBox(_T("SM2_sign Failed!"));
 		goto ERR_OUT;
 	}
-	ret = SM2_verify(1, digest, sizeof(digest), (unsigned char*)sign_ret, sign_len, eckey);
+	unsigned char out1[64] = { 0 };
+
+	ret = eccDerDecodeSignature(sign_ret, sign_len, out1, 64);
+
+#endif
+
+#if 0
+	BN_hex2bn(&prikey, "5316CABD1C86123443B97781C28A2F62CA7887E0344F3C15320A0E9212CA86C9");
+	EC_KEY_set_private_key(eckey, prikey);
+	pubkey = EC_POINT_hex2point(group, "04F6E8CA88185C155EB766E68BD1EEBACBFDB93349B0A2B5DCE1DCCBA0AD3EE22DD62EEB365DFD474C9533638DE93D5201EF9296F24AB0D9B52DC2A30195903729", pubkey, NULL);
+	EC_KEY_set_public_key(eckey, pubkey);
+
+	digest_len = sizeof(digest);
+	ret = SM2_digest(
+		(unsigned char*)DEFAULT_SM2_SIGN_USER_ID,
+		DEFAULT_SM2_SIGN_USER_ID_LEN,
+		msg,
+		sizeof(msg),
+		digest,
+		&digest_len,
+		eckey);
 	if (ret != 1)
 	{
-		AfxMessageBox(_T("SM2_verify Failed!"));
+		AfxMessageBox(_T("SM2_digest Failed:0x%08X\n", ret));
+		return 1;
+	}
+
+	sign_len = 256;
+	ret = SM2_sign(1, digest, sizeof(digest), sign_ret, &sign_len, eckey);
+	if (ret != 1)
+	{
+		AfxMessageBox(_T("SM2_sign Failed!"));
+		return 1;
+	}
+	ret = SM2_verify(1, digest, digest_len, (unsigned char*)sign_ret, sign_len, eckey);
+	if (ret != 1)
+	{
+		AfxMessageBox(_T("SM2_sign Failed!"));
 		goto ERR_OUT;
 	}
 
+	unsigned char out1[64] = { 0 };
+
+	ret = eccDerDecodeSignature(sign_ret, sign_len, out1, 64);
+#endif
+
 	// 2.3把签名填充到数据包的签名字段
-	memcpy(chip_init_cmd_inner.Signaute, sign_ret, sign_len);
+	memcpy(chip_init_cmd_inner.Signaute, out1, 64);
 
 	//3.随机生成一个会话密钥（IV+KEY），使用板卡设备证书加密会话密钥(SM2)
 	//3.1从加密板卡设备证书中获取公钥
+#if 0
 	fp = fopen(JMBK_CERT_PATH, "rb");
 	if (fp == NULL)
 		goto ERR_OUT;
@@ -606,6 +752,10 @@ int gen_pkg_for_device(_In_ ChipInitRequest ChipInitReq, _Out_ ChipInitCommand *
 	memcpy(Bjmbkpub, x->cert_info->key->public_key->data, x->cert_info->key->public_key->length);
 	CharStr2HexStr((unsigned char*)Bjmbkpub, 65, HexJmbkPub);
 	X509_free(x);
+#endif
+
+
+	CharStr2HexStr((unsigned char*)Pub, 65, HexJmbkPub);
 	pubkey2 = EC_POINT_hex2point(group2, HexJmbkPub, pubkey2, NULL);
 	EC_KEY_set_public_key(eckey2, pubkey2);
 
@@ -618,15 +768,17 @@ int gen_pkg_for_device(_In_ ChipInitRequest ChipInitReq, _Out_ ChipInitCommand *
 	}
 
 	//4.使用会话密钥加密CHIP_INIT_CMD_INNER数据包(SM4_CBC)
-	int src_len = sizeof(ChipInitCommandInner)+8;
+	int src_len = sizeof(chip_init_cmd_inner)+8;
 	unsigned char sms4_cbc_ret[1024] = { 0 };
+
 	unsigned char *srcd = new unsigned char[src_len];
-	memcpy(srcd, &chip_init_cmd_inner, src_len);
+	memset(srcd, 0, src_len);
+	memcpy(srcd, &chip_init_cmd_inner, sizeof(chip_init_cmd_inner));
 	sm4_context ctx;
 	sm4_setkey_enc(&ctx, aes_key);
-	sm4_crypt_cbc(&ctx, SM4_ENCRYPT, src_len, aes_iv, (unsigned char*)&chip_init_cmd_inner, sms4_cbc_ret);
+	sm4_crypt_cbc(&ctx, SM4_ENCRYPT, src_len, aes_iv, srcd, sms4_cbc_ret);
 
-	memcpy(&chip_init_cmd->cmdCipher, sms4_cbc_ret, src_len);
+	memcpy(chip_init_cmd->cmdCipher, sms4_cbc_ret, src_len);
 	chip_init_cmd->cmdCipherLen = src_len;
 	delete srcd;
 
@@ -688,7 +840,7 @@ DWORD WINAPI ProductionThread(LPVOID lpData)
  
 	CTime cctime=CTime::GetCurrentTime();
 
-#if 0
+#if 1
 	// 	SENC_NewDevList(&dList);
 	dList=&pThis->gDevList;
 
@@ -717,7 +869,6 @@ DWORD WINAPI ProductionThread(LPVOID lpData)
 #endif
 
 	do{
-			
 #if 0
 		pThis->mPrgsCtr.SetPos(0);
 #pragma region 生产过程	
@@ -1027,8 +1178,9 @@ DWORD WINAPI ProductionThread(LPVOID lpData)
 #pragma endregion
 
 #endif
+
 #pragma region 板卡初始化过程
-#if 0
+#if 1
 		//获取板卡初始化状态
 		unsigned char ECstate;
 		unsigned int EClen;
@@ -1047,15 +1199,13 @@ DWORD WINAPI ProductionThread(LPVOID lpData)
 		}
 #endif
 		//组建初始化命令包
-		ChipInitRequest ChipInitReq;
-		memset(&ChipInitReq, 1, sizeof(ChipInitRequest));
 		ChipInitCommand chip_init_cmd = {0};
 		flag = gen_pkg_for_device(ChipInitReq, &chip_init_cmd);
 		if (flag != SENC_SUCCESS){
 			tempmsg.Format(_T("组建初始化命令包失败，错误码为：0x%.8x\r\n"), flag);
 			break;
 		}
-#if 0
+#if 1
 		//板卡执行初始化
 		unsigned char mock_key_cert[2048] = { 0 };
 		int mock_key_len = 0;
