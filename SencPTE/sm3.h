@@ -43,7 +43,7 @@ void sm3_starts( sm3_context *ctx );
  * \param input    buffer holding the  data
  * \param ilen     length of the input data
  */
-void sm3_update( sm3_context *ctx, unsigned char *input, int ilen );
+void sm3_update_ex( sm3_context *ctx, unsigned char *input, int ilen );
 
 /**
  * \brief          SM3 final digest
@@ -59,7 +59,7 @@ void sm3_finish( sm3_context *ctx, unsigned char output[32] );
  * \param ilen     length of the input data
  * \param output   SM3 checksum result
  */
-void sm3( unsigned char *input, int ilen,
+void sm3_ex( unsigned char *input, int ilen,
            unsigned char output[32]);
 
 /**

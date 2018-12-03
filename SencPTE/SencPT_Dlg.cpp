@@ -23,6 +23,7 @@
 #include "sm3.h"
 #include "sm4.h"
 
+
 extern "C"
 {
 #include "openssl/applink.c"
@@ -44,23 +45,30 @@ extern "C"
 #define		JMBK_CERT_PATH			"./证书/st.device.cer"		//加密板卡设备证书
 #define		JMBK_CERT_CSR_PATH		"./证书/devcertcsr"			//加密板卡设备CSR
 #define		DEVICECA_CERT_PATH		"./证书/st.device.ca.cer"	//设备CA证书
-#define		ROOTCA_CERT_PATH		"./证书/deviceca.cer"		//根证书
+#define		ROOTCA_CERT_PATH		"./证书/st.root.ca.cer"		//根证书
 
 #define		JMJ_CERT_PATH			"./证书/st.device.cer"		//加密板卡设备证书
 #define		JMJ_PRIKEY_PATH			"./证书/st.device.pri"		//加密机私钥
 
 #define DEFAULT_SM2_SIGN_USER_ID			"1234567812345678"
 #define DEFAULT_SM2_SIGN_USER_ID_LEN		16
-
+#define SM3_DIGEST_LENGTH					32
 // IMPLEMENT_DYNAMIC(SencPT_Dlg, CDialogEx)
 
 //自定义写死数据
 static unsigned char innerkey1[] =
 "\x44\x44\x44\x44\x44\x44\x44\x44\x44\x44\x44\x44\x44\x44\x44\x44"
 "\x44\x44\x44\x44\x44\x44\x44\x44\x44\x44\x44\x44\x44\x44\x44\x44";
-static unsigned char _seed[] =
+const static unsigned char _seed[] =
 "\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11"
 "\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11";
+const static unsigned char _seed1[] = { 
+	0xA4, 0x8F, 0xC8, 0x6D, 0x02, 0x22, 0xEF, 0x9E, 0xB2, 0x6F, 0x2B, 0xB9, 0x44, 0x4F, 0xBC, 0xCD, 
+	0x89, 0xA4, 0x32, 0x7E, 0x97, 0xDE, 0xCF, 0xAE, 0x4A, 0x83, 0xF5, 0x65, 0x37, 0x98, 0x6E, 0xA6 };
+const static unsigned char _seed2[] = { 
+	0x56, 0xD5, 0x5C, 0x3B, 0x40, 0x72, 0x7B, 0xC1, 0x58, 0xE2, 0xF5, 0x5E, 0x6D, 0x85, 0x5B, 0xBB, 
+	0xA1, 0x8E, 0x27, 0xAA, 0x4C, 0xC7, 0xDB, 0x0A, 0xB3, 0xB7, 0xA0, 0x3D, 0x9E, 0xD8, 0x5C, 0x15 };
+
 static unsigned char aes_key[] = {
 	0x54, 0x5D, 0xBA, 0x6B, 0xE5, 0xA2, 0x45, 0x40, 0xA1, 0xCE, 0x99, 0xC6, 0xFB, 0xED, 0xCC, 0xE8 };
 static unsigned char aes_iv[16] = {
@@ -88,6 +96,9 @@ static unsigned char jmjpri[] =
 
 unsigned char Pri[33] = { 0 };
 unsigned char Pub[66] = { 0x04 };
+
+unsigned char kenc[32] = { 0 };
+unsigned char kmac[32] = { 0 };
 
 
 SencPT_Dlg::SencPT_Dlg(CWnd* pParent /*=NULL*/)
@@ -868,9 +879,10 @@ DWORD WINAPI ProductionThread(LPVOID lpData)
 	}
 #endif
 
+	pThis->mPrgsCtr.SetPos(0);
+
 	do{
-#if 0
-		pThis->mPrgsCtr.SetPos(0);
+#if 1
 #pragma region 生产过程	
 		//设置ID ，根据日期、时间、板卡生产编号
 		// 	data1[0]=(cctime.GetYear())>>8&0xff;
@@ -950,12 +962,12 @@ DWORD WINAPI ProductionThread(LPVOID lpData)
 		pThis->mPrgsCtr.StepIt();
 
 		//生产板卡设备密钥对
-		//flag = SENC_Product_SM2KeyGenerate(dHandle, 2, 1);
-		//if (flag != SENC_SUCCESS){
-		//	tempmsg.Format(_T("生成板卡设备密钥对失败，错误码为：0x%.8x\r\n"), flag);
-		//	break;
-		//}
-		//pThis->mPrgsCtr.StepIt();
+		flag = SENC_Product_SM2KeyGenerate(dHandle, 2, 1);
+		if (flag != SENC_SUCCESS){
+			tempmsg.Format(_T("生成板卡设备密钥对失败，错误码为：0x%.8x\r\n"), flag);
+			break;
+		}
+		pThis->mPrgsCtr.StepIt();
 
 		//申请设备证书CSR
 		flag = SENC_Product_RequestCSR(dHandle, &csrlen, csr);
@@ -1209,7 +1221,7 @@ DWORD WINAPI ProductionThread(LPVOID lpData)
 		//板卡执行初始化
 		unsigned char mock_key_cert[2048] = { 0 };
 		int mock_key_len = 0;
-		fp = fopen("./证书/st.device.cer", "rb");
+		fp = fopen(JMJ_CERT_PATH, "rb");
 		mock_key_len = fread(mock_key_cert, 1, 2048, fp);
 		flag = SENC_DataProtector_ChipInit(dHandle, chip_init_cmd, devcacert, devcacertlen, mock_key_cert,mock_key_len);
 		if (flag != SENC_SUCCESS){
@@ -1226,35 +1238,25 @@ DWORD WINAPI ProductionThread(LPVOID lpData)
 		}
 
 		//验证数据包
-//		unsigned char _seed1[] = { 0xA4, 0x8F, 0xC8, 0x6D, 0x02, 0x22, 0xEF, 0x9E, 0xB2, 0x6F, 0x2B, 0xB9, 0x44, 0x4F, 0xBC, 0xCD, 0x89, 0xA4, 0x32, 0x7E, 0x97, 0xDE, 0xCF, 0xAE, 0x4A, 0x83, 0xF5, 0x65, 0x37, 0x98, 0x6E, 0xA6 };
-//		unsigned char sha256buf[64] = { 0 };
-//		memcpy(sha256buf, _seed, 32); 
-//		memcpy(sha256buf + 32, _seed1, 32);
-//		int out_len = 0;
-//		unsigned char kenc[SHA256_DIGEST_LENGTH] = { 0 };
-//		SHA256(sha256buf, 64, kenc);
-//
-//		AES_KEY key;
-//		AES_set_decrypt_key(kenc, 32 * 8, &key);
-//		unsigned char aes_out[64] = { 0 };
-//		for (int i = 0; i < 64; i+=16)
-//		{
-//			AES_ecb_encrypt(pkg.cipher + i, aes_out + i, &key, AES_DECRYPT);
-//		}
-//
-//// 		AES_ecb_encrypt(pkg.cipher , aes_out , &key, AES_DECRYPT);
-//// 		AES_ecb_encrypt(pkg.cipher+32, aes_out+32, &key, AES_DECRYPT);
-//		typedef struct AUTH_ADM_KEY_INNER_ST
-//		{
-//			UINT8 rand[32];
-//			UINT8 mac[32];
-//		}AUTH_ADM_KEY_INNER;
-//		AUTH_ADM_KEY_INNER *auth = (AUTH_ADM_KEY_INNER *)aes_out;
-//		unsigned char _kseed2[] = {0x56, 0xD5, 0x5C, 0x3B, 0x40, 0x72, 0x7B, 0xC1, 0x58, 0xE2, 0xF5, 0x5E, 0x6D, 0x85, 0x5B, 0xBB, 0xA1, 0x8E, 0x27, 0xAA, 0x4C, 0xC7, 0xDB, 0x0A, 0xB3, 0xB7, 0xA0, 0x3D, 0x9E, 0xD8, 0x5C, 0x15 };
-//		memcpy(sha256buf, _seed, 32);
-//		memcpy(sha256buf + 32, _kseed2, 32);
-//		//Kmac
-//		SHA256(sha256buf, 64, kenc);
+
+		unsigned char sm3buf[64] = { 0 };
+		memcpy(sm3buf, _seed, 32);
+		memcpy(sm3buf + 32, _seed1, 32);
+		sm3_ex(sm3buf, 64, kenc);
+		memcpy(sm3buf, _seed, 32);
+		memcpy(sm3buf + 32, _seed2, 32);
+		sm3_ex(sm3buf, 64, kmac);
+
+		unsigned char sm4_out[128] = { 0 };
+		sm4_context ctx;
+		sm4_setkey_dec(&ctx, kenc);
+		sm4_crypt_ecb(&ctx, SM4_DECRYPT, pkg.cipherLen, pkg.cipher, sm4_out);
+
+		AuthAdminKeyInner* auth = (AuthAdminKeyInner *)sm4_out;
+		unsigned char sm3_out[32] = { 0 };
+		sm3_hmac(kmac, 32, auth->rand, 32, sm3_out);
+		if (memcmp(auth->Mac, sm3_out, 32))
+			printf("Failed!");
 #pragma endregion
 #endif
 	}while(0);

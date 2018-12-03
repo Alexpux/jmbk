@@ -230,7 +230,7 @@ static void sm3_process( sm3_context *ctx, unsigned char data[64] )
 /*
  * SM3 process buffer
  */
-void sm3_update( sm3_context *ctx, unsigned char *input, int ilen )
+void sm3_update_ex( sm3_context *ctx, unsigned char *input, int ilen )
 {
     int fill;
     unsigned long left;
@@ -298,8 +298,8 @@ void sm3_finish( sm3_context *ctx, unsigned char output[32] )
     last = ctx->total[0] & 0x3F;
     padn = ( last < 56 ) ? ( 56 - last ) : ( 120 - last );
 
-    sm3_update( ctx, (unsigned char *) sm3_padding, padn );
-    sm3_update( ctx, msglen, 8 );
+    sm3_update_ex( ctx, (unsigned char *) sm3_padding, padn );
+    sm3_update_ex( ctx, msglen, 8 );
 
     PUT_ULONG_BE( ctx->state[0], output,  0 );
     PUT_ULONG_BE( ctx->state[1], output,  4 );
@@ -314,13 +314,13 @@ void sm3_finish( sm3_context *ctx, unsigned char output[32] )
 /*
  * output = SM3( input buffer )
  */
-void sm3( unsigned char *input, int ilen,
+void sm3_ex( unsigned char *input, int ilen,
            unsigned char output[32] )
 {
     sm3_context ctx;
 
     sm3_starts( &ctx );
-    sm3_update( &ctx, input, ilen );
+    sm3_update_ex( &ctx, input, ilen );
     sm3_finish( &ctx, output );
 
     memset( &ctx, 0, sizeof( sm3_context ) );
@@ -342,7 +342,7 @@ int sm3_file( char *path, unsigned char output[32] )
     sm3_starts( &ctx );
 
     while( ( n = fread( buf, 1, sizeof( buf ), f ) ) > 0 )
-        sm3_update( &ctx, buf, (int) n );
+        sm3_update_ex( &ctx, buf, (int) n );
 
     sm3_finish( &ctx, output );
 
@@ -368,7 +368,7 @@ void sm3_hmac_starts( sm3_context *ctx, unsigned char *key, int keylen )
 
     if( keylen > 64 )
     {
-        sm3( key, keylen, sum );
+        sm3_ex( key, keylen, sum );
         keylen = 32;
 		//keylen = ( is224 ) ? 28 : 32;
         key = sum;
@@ -384,7 +384,7 @@ void sm3_hmac_starts( sm3_context *ctx, unsigned char *key, int keylen )
     }
 
     sm3_starts( ctx);
-    sm3_update( ctx, ctx->ipad, 64 );
+    sm3_update_ex( ctx, ctx->ipad, 64 );
 
     memset( sum, 0, sizeof( sum ) );
 }
@@ -394,7 +394,7 @@ void sm3_hmac_starts( sm3_context *ctx, unsigned char *key, int keylen )
  */
 void sm3_hmac_update( sm3_context *ctx, unsigned char *input, int ilen )
 {
-    sm3_update( ctx, input, ilen );
+    sm3_update_ex( ctx, input, ilen );
 }
 
 /*
@@ -410,8 +410,8 @@ void sm3_hmac_finish( sm3_context *ctx, unsigned char output[32] )
 
     sm3_finish( ctx, tmpbuf );
     sm3_starts( ctx );
-    sm3_update( ctx, ctx->opad, 64 );
-    sm3_update( ctx, tmpbuf, hlen );
+    sm3_update_ex( ctx, ctx->opad, 64 );
+    sm3_update_ex( ctx, tmpbuf, hlen );
     sm3_finish( ctx, output );
 
     memset( tmpbuf, 0, sizeof( tmpbuf ) );
