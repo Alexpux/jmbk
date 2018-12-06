@@ -3710,6 +3710,7 @@ unsigned int SENC_CMD_DataProtector_GetInitReq(SENCryptCard* IN sencDev,
 {
 	unsigned int ucRet = SENC_SUCCESS;
 	unsigned int retLen;
+	unsigned int offset;
 	unsigned char cmdBuf[SENC_BUFFER_SIZE] = { 0 };
 	unsigned char revBuf[SENC_BUFFER_SIZE] = { 0 };
 
@@ -3757,7 +3758,7 @@ unsigned int SENC_CMD_DataProtector_GetInitReq(SENCryptCard* IN sencDev,
 		*CaCertLen = (revBuf[7] << 8) + revBuf[8];
 		memcpy(CaCert, revBuf + 9 + sizeof(ChipInitRequest), (*CaCertLen));
 		memcpy(Pri, revBuf + 9 + sizeof(ChipInitRequest)+(*CaCertLen), 32);
-		memcpy(Pub, revBuf + 9 + sizeof(ChipInitRequest)+(*CaCertLen)+32, 64);
+		memcpy(Pub, revBuf + 9 + sizeof(ChipInitRequest)+(*CaCertLen)+32, 65);
 	} while (0);
 
 	memset(cmdBuf, 0x00, sizeof(cmdBuf));
@@ -3861,6 +3862,291 @@ unsigned int SENC_CMD_DataProtector_GetAuthPackage(SENCryptCard* IN sencDev,
 			break;
 
 		memcpy(Pkg, revBuf + 6, sizeof(AuthAdminKey));
+	} while (0);
+
+	memset(cmdBuf, 0x00, sizeof(cmdBuf));
+	memset(revBuf, 0x00, sizeof(revBuf));
+
+	return ucRet;
+}
+
+//创建KeyChain
+unsigned int SENC_CMD_KeyManager_CreateKeyChain(SENCryptCard* IN sencDev,
+												KeychainCreateReq IN KCCreateReq,
+												uint32_t IN KCCreateReqLen,
+												uint8_t* IN CaCert,
+												uint32_t IN CaCertLen,
+												uint8_t* IN FirmailCert,
+												uint32_t IN FirmailCertLen,
+												uint8_t* IN KeyBagId,
+												KeychainCreateCode* OUT KCCreateCode,
+												uint32_t* OUT KCCreateCodeLen)
+{
+	unsigned int ucRet = SENC_SUCCESS;
+	unsigned int retLen;
+	unsigned int sendLen;
+	unsigned int offset;
+	unsigned char cmdBuf[SENC_BUFFER_SIZE] = { 0 };
+	unsigned char revBuf[SENC_BUFFER_SIZE] = { 0 };
+
+	//参数检查
+	if (!sencDev)
+		return ERROR_LOG(SENC_ERROR_DEVICE_NOT_FOUND, "CMD CreateKeyChain: Device Not Found");
+
+	sendLen = 1 + KCCreateReqLen + CaCertLen + FirmailCertLen + KEYBAGID_LENGTH + 3 * sizeof(uint32_t);
+	//组包
+	cmdBuf[0] = SENC_CMD_KEY_MANAGEMENT;
+	cmdBuf[1] = sendLen >> 8;
+	cmdBuf[2] = sendLen && 0xff;
+	cmdBuf[3] = KM_CREATE_KEY_CHAIN;
+	//创建请求包长度及内容
+	cmdBuf[4] = KCCreateReqLen >> 8;
+	cmdBuf[5] = KCCreateReqLen & 0xff;
+	offset = 6;
+	memcpy(cmdBuf + offset, &KCCreateReq, KCCreateReqLen);
+	offset += KCCreateReqLen;
+	//KeyBag ID
+	memcpy(cmdBuf + offset, KeyBagId, 8);
+	offset += 8;
+	//CA证书长度及内容
+	cmdBuf[offset] = CaCertLen >> 8;
+	cmdBuf[offset + 1] = CaCertLen & 0xff;
+	offset += 2;
+	memcpy(cmdBuf + offset, CaCert, CaCertLen);
+	offset += CaCertLen;
+	//Firmail证书长度及内容
+	cmdBuf[offset] = FirmailCertLen >> 8;
+	cmdBuf[offset + 1] = FirmailCertLen & 0xff;
+	offset += 2;
+	memcpy(cmdBuf + offset, FirmailCert, FirmailCertLen);
+
+	do{
+		ucRet = SENC_CMD_Transfer(sencDev, SENC_PLAINTEXT_SIGN, SENC_BULK_ENDPOINT_WRITE_2K, SENC_BULK_ENDPOINT_READ_2K, cmdBuf, SENC_TRANSFER_LENGTH_2K, revBuf, SENC_TRANSFER_LENGTH_2K);
+		if (ucRet != SENC_SUCCESS)
+			break;
+
+		ucRet = RetCheck(revBuf, &retLen, (((SENC_CMD_DOE_MANAGEMENT & 0xf) << 4) | DP_GET_AUTH_PACKAGE));
+		ERROR_LOG(ucRet, "CMD CreateKeyChain: Returned Error");
+		if (ucRet != SENC_SUCCESS)
+			break;
+
+		*KCCreateCodeLen = (revBuf[6] << 8) + revBuf[7];
+		memcpy(KCCreateCode, revBuf + 8, *KCCreateCodeLen);
+	} while (0);
+
+	memset(cmdBuf, 0x00, sizeof(cmdBuf));
+	memset(revBuf, 0x00, sizeof(revBuf));
+
+	return ucRet;
+}
+
+//签发BindCode
+unsigned int SENC_CMD_KeyManager_BindCode(SENCryptCard* IN sencDev,
+										  KeybagBindCode IN KBBindCode,
+										  uint32_t IN KBBindCodeLen,
+										  uint8_t* IN CaCert,
+										  uint32_t IN CaCertLen,
+										  uint8_t* IN KeyBagCert,
+										  uint32_t IN KeyBagCertLen,
+										  uint8_t* OUT BindCodePlain,
+										  uint8_t* OUT PhoneNumber,
+										  uint8_t* OUT BindCodeCipher,
+										  uint32_t* OUT BindCodeCipherLen)
+{
+	unsigned int ucRet = SENC_SUCCESS;
+	unsigned int retLen;
+	unsigned int sendLen;
+	unsigned int offset;
+	unsigned char cmdBuf[SENC_BUFFER_SIZE] = { 0 };
+	unsigned char revBuf[SENC_BUFFER_SIZE] = { 0 };
+
+	//参数检查
+	if (!sencDev)
+		return ERROR_LOG(SENC_ERROR_DEVICE_NOT_FOUND, "CMD BindCode: Device Not Found");
+
+	sendLen = 1 + KBBindCodeLen + CaCertLen + KeyBagCertLen  + 3 * sizeof(uint32_t);
+	//组包
+	cmdBuf[0] = SENC_CMD_KEY_MANAGEMENT;
+	cmdBuf[1] = sendLen >> 8;
+	cmdBuf[2] = sendLen && 0xff;
+	cmdBuf[3] = KM_SIGN_BIND_CODE;
+	//绑定码长度及内容
+	cmdBuf[4] = KBBindCodeLen >> 8;
+	cmdBuf[5] = KBBindCodeLen & 0xff;
+	offset = 6;
+	memcpy(cmdBuf + offset, &KBBindCode, KBBindCodeLen);
+	offset += KBBindCodeLen;
+	//CA证书长度及内容
+	cmdBuf[offset] = CaCertLen >> 8;
+	cmdBuf[offset + 1] = CaCertLen & 0xff;
+	offset += 2;
+	memcpy(cmdBuf + offset, CaCert, CaCertLen);
+	offset += CaCertLen;
+	//Firmail证书长度及内容
+	cmdBuf[offset] = KeyBagCertLen >> 8;
+	cmdBuf[offset + 1] = KeyBagCertLen & 0xff;
+	offset += 2;
+	memcpy(cmdBuf + offset, KeyBagCert, KeyBagCertLen);
+
+	do{
+		ucRet = SENC_CMD_Transfer(sencDev, SENC_PLAINTEXT_SIGN, SENC_BULK_ENDPOINT_WRITE_2K, SENC_BULK_ENDPOINT_READ_2K, cmdBuf, SENC_TRANSFER_LENGTH_2K, revBuf, SENC_TRANSFER_LENGTH_2K);
+		if (ucRet != SENC_SUCCESS)
+			break;
+
+		ucRet = RetCheck(revBuf, &retLen, (((SENC_CMD_DOE_MANAGEMENT & 0xf) << 4) | DP_GET_AUTH_PACKAGE));
+		ERROR_LOG(ucRet, "CMD BindCode: Returned Error");
+		if (ucRet != SENC_SUCCESS)
+			break;
+
+		//绑定码明文
+		offset = 6;
+		memcpy(BindCodePlain, revBuf + offset, BINDCODE_PLAIN_LEN);
+		offset += BINDCODE_PLAIN_LEN;
+		//电话号码
+		memcpy(PhoneNumber, revBuf + offset, PHONE_NUMBER_LEN);
+		offset += PHONE_NUMBER_LEN;
+		//绑定码校验包密文长度及内容
+		*BindCodeCipherLen = (revBuf[offset] << 8) + revBuf[offset+1];
+		offset += 2;
+		memcpy(BindCodeCipher, revBuf + offset, *BindCodeCipherLen);
+	} while (0);
+
+	memset(cmdBuf, 0x00, sizeof(cmdBuf));
+	memset(revBuf, 0x00, sizeof(revBuf));
+
+	return ucRet;
+}
+
+//创建Circle
+unsigned int SENC_CMD_KeyManager_CreateCircle(SENCryptCard* IN sencDev,
+											  KeybagCreateCircleReq IN KBCreateCircleReq,
+											  uint32_t IN KBCreateCircleReqLen,
+											  uint8_t* IN BindCodeVrfPkgCipher,
+											  uint32_t IN BindCodeVrfPkgCipherLen,
+											  uint32_t* OUT TimeStamp,
+											  KeybagCircle* OUT KBCircle,
+											  uint32_t* OUT KBCircleLen)
+{
+	unsigned int ucRet = SENC_SUCCESS;
+	unsigned int retLen;
+	unsigned int sendLen;
+	unsigned int offset;
+	unsigned char cmdBuf[SENC_BUFFER_SIZE] = { 0 };
+	unsigned char revBuf[SENC_BUFFER_SIZE] = { 0 };
+
+	//参数检查
+	if (!sencDev)
+		return ERROR_LOG(SENC_ERROR_DEVICE_NOT_FOUND, "CMD CreateCircle: Device Not Found");
+
+	sendLen = 1 + KBCreateCircleReqLen + BindCodeVrfPkgCipherLen + 2 * sizeof(uint32_t);
+	//组包
+	cmdBuf[0] = SENC_CMD_KEY_MANAGEMENT;
+	cmdBuf[1] = sendLen >> 8;
+	cmdBuf[2] = sendLen && 0xff;
+	cmdBuf[3] = KM_CREATE_CIRCLE;
+	//Circle请求包长度及内容
+	cmdBuf[4] = KBCreateCircleReqLen >> 8;
+	cmdBuf[5] = KBCreateCircleReqLen & 0xff;
+	offset = 6;
+	memcpy(cmdBuf + offset, &KBCreateCircleReq, KBCreateCircleReqLen);
+	offset += KBCreateCircleReqLen;
+	//BindCode校验包密文长度及内容
+	cmdBuf[offset] = BindCodeVrfPkgCipherLen >> 8;
+	cmdBuf[offset + 1] = BindCodeVrfPkgCipherLen & 0xff;
+	offset += 2;
+	memcpy(cmdBuf + offset, BindCodeVrfPkgCipher, BindCodeVrfPkgCipherLen);
+
+	do{
+		ucRet = SENC_CMD_Transfer(sencDev, SENC_PLAINTEXT_SIGN, SENC_BULK_ENDPOINT_WRITE_2K, SENC_BULK_ENDPOINT_READ_2K, cmdBuf, SENC_TRANSFER_LENGTH_2K, revBuf, SENC_TRANSFER_LENGTH_2K);
+		if (ucRet != SENC_SUCCESS)
+			break;
+
+		ucRet = RetCheck(revBuf, &retLen, (((SENC_CMD_DOE_MANAGEMENT & 0xf) << 4) | DP_GET_AUTH_PACKAGE));
+		ERROR_LOG(ucRet, "CMD CreateCircle: Returned Error");
+		if (ucRet != SENC_SUCCESS)
+			break;
+
+		//时间戳
+		offset = 6;
+		memcpy(TimeStamp, revBuf + offset, 4);
+		offset += 4;
+		//Circle包长度及内容
+		*KBCircleLen = (revBuf[offset] << 8) + revBuf[offset + 1];
+		offset += 2;
+		memcpy(KBCircle, revBuf + offset, *KBCircleLen);
+	} while (0);
+
+	memset(cmdBuf, 0x00, sizeof(cmdBuf));
+	memset(revBuf, 0x00, sizeof(revBuf));
+
+	return ucRet;
+}
+
+//加入Circle
+unsigned int SENC_CMD_KeyManager_JoinCircle(SENCryptCard* IN sencDev,
+											KeybagCircle IN KBOldCircle,
+											uint32_t IN KBOldCircleLen,
+											KeybagJoinCircleApprove IN KBJoinCircleApprove,
+											uint32_t IN KBJoinCircleApproveLen,
+											uint8_t* IN BindCodeVrfPkgCipher,
+											uint32_t IN BindCodeVrfPkgCipherLen,
+											uint32_t* OUT TimeStamp,
+											KeybagCircle* OUT KBNewCircle,
+											uint32_t* OUT KBNewCircleLen)
+{
+	unsigned int ucRet = SENC_SUCCESS;
+	unsigned int retLen;
+	unsigned int sendLen;
+	unsigned int offset;
+	unsigned char cmdBuf[SENC_BUFFER_SIZE] = { 0 };
+	unsigned char revBuf[SENC_BUFFER_SIZE] = { 0 };
+
+	//参数检查
+	if (!sencDev)
+		return ERROR_LOG(SENC_ERROR_DEVICE_NOT_FOUND, "CMD JoinCircle: Device Not Found");
+
+	sendLen = 1 + KBOldCircleLen + KBJoinCircleApproveLen + BindCodeVrfPkgCipherLen + 3 * sizeof(uint32_t);
+	//组包
+	cmdBuf[0] = SENC_CMD_KEY_MANAGEMENT;
+	cmdBuf[1] = sendLen >> 8;
+	cmdBuf[2] = sendLen && 0xff;
+	cmdBuf[3] = KM_CREATE_CIRCLE;
+	//OldCircle包长度及内容
+	cmdBuf[4] = KBOldCircleLen >> 8;
+	cmdBuf[5] = KBOldCircleLen & 0xff;
+	offset = 6;
+	memcpy(cmdBuf + offset, &KBOldCircle, KBOldCircleLen);
+	offset += KBOldCircleLen;
+	//加入Circle审批包长度及内容
+	cmdBuf[offset] = KBJoinCircleApproveLen >> 8;
+	cmdBuf[offset + 1] = KBJoinCircleApproveLen & 0xff;
+	offset += 2;
+	memcpy(cmdBuf + offset, &KBJoinCircleApprove, KBJoinCircleApproveLen);
+	offset += KBJoinCircleApproveLen;
+	//BindCode校验包密文长度及内容
+	cmdBuf[offset] = BindCodeVrfPkgCipherLen >> 8;
+	cmdBuf[offset + 1] = BindCodeVrfPkgCipherLen & 0xff;
+	offset += 2;
+	memcpy(cmdBuf + offset, BindCodeVrfPkgCipher, BindCodeVrfPkgCipherLen);
+
+	do{
+		ucRet = SENC_CMD_Transfer(sencDev, SENC_PLAINTEXT_SIGN, SENC_BULK_ENDPOINT_WRITE_2K, SENC_BULK_ENDPOINT_READ_2K, cmdBuf, SENC_TRANSFER_LENGTH_2K, revBuf, SENC_TRANSFER_LENGTH_2K);
+		if (ucRet != SENC_SUCCESS)
+			break;
+
+		ucRet = RetCheck(revBuf, &retLen, (((SENC_CMD_DOE_MANAGEMENT & 0xf) << 4) | DP_GET_AUTH_PACKAGE));
+		ERROR_LOG(ucRet, "CMD JoinCircle: Returned Error");
+		if (ucRet != SENC_SUCCESS)
+			break;
+
+		//时间戳
+		offset = 6;
+		memcpy(TimeStamp, revBuf + offset, 4);
+		offset += 4;
+		//Circle包长度及内容
+		*KBNewCircleLen = (revBuf[offset] << 8) + revBuf[offset + 1];
+		offset += 2;
+		memcpy(KBNewCircle, revBuf + offset, *KBNewCircleLen);
 	} while (0);
 
 	memset(cmdBuf, 0x00, sizeof(cmdBuf));

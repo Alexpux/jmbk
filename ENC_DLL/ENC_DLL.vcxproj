@@ -157,7 +157,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="devcacli.h" />
     <ClInclude Include="itoken.h" />
     <ClInclude Include="lock.h" />
     <ClInclude Include="openssl_locker.h" />

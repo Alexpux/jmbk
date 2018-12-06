@@ -2885,6 +2885,111 @@ unsigned int SENC_DataProtector_GetAuthPackage(SENCHANDLE IN SencDevHandle,
 	return SENC_CMD_DataProtector_GetAuthPackage(pstEncDev, pkg);
 }
 
+//创建KeyChain
+unsigned int SENC_KeyManager_CreateKeyChain(SENCHANDLE IN SencDevHandle,
+											KeychainCreateReq IN KCCreateReq,
+											uint32_t IN KCCreateReqLen,
+											uint8_t* IN CaCert,
+											uint32_t IN CaCertLen,
+											uint8_t* IN FirmailCert,
+											uint32_t IN FirmailCertLen,
+											uint8_t* IN KeyBagId,
+											KeychainCreateCode* OUT KCCreateCode,
+											uint32_t* OUT KCCreateCodeLen)
+{
+	SENCryptCard* pstEncDev = NULL;
 
+	if (!SencDevHandle)
+		return ERROR_LOG(SENC_ERROR_DEVICE_NOT_FOUND, "SENC_KeyManager_CreateKeyChain: Device Not Found");
+	if (!CaCert || !FirmailCert || !KeyBagId || !KCCreateCode || !KCCreateCodeLen)
+		return ERROR_LOG(SENC_ERROR_PARAMETER_ERROR, "SENC_KeyManager_CreateKeyChain: Parameter Null");
+
+	//handle转为结构体指针
+	pstEncDev = SencHandle2Ptr(SencDevHandle);  //指针转换
+	if (pstEncDev->OpenSign == FALSE)
+		return ERROR_LOG(SENC_ERROR_DEVICE_CLOSED, "SENC_KeyManager_CreateKeyChain: Device Closed");
+
+	return SENC_CMD_KeyManager_CreateKeyChain(pstEncDev, KCCreateReq, KCCreateReqLen, CaCert, CaCertLen, FirmailCert, FirmailCertLen, KeyBagId, KCCreateCode, KCCreateCodeLen);
+}
+
+//签发BindCode
+unsigned int SENC_KeyManager_BindCode(SENCHANDLE IN SencDevHandle,
+									  KeybagBindCode IN KBBindCode,
+									  uint32_t IN KBBindCodeLen,
+									  uint8_t* IN CaCert,
+									  uint32_t IN CaCertLen,
+									  uint8_t* IN KeyBagCert,
+									  uint32_t IN KeyBagCertLen,
+									  uint8_t* OUT BindCodePlain,
+									  uint8_t* OUT PhoneNumber,
+									  uint8_t* OUT BindCodeCipher,
+									  uint32_t* OUT BindCodeCipherLen)
+{
+	SENCryptCard* pstEncDev = NULL;
+
+	if (!SencDevHandle)
+		return ERROR_LOG(SENC_ERROR_DEVICE_NOT_FOUND, "SENC_KeyManager_BindCode: Device Not Found");
+	if (!CaCert || !KeyBagCert || !BindCodePlain || !PhoneNumber || !BindCodeCipher || !BindCodeCipherLen)
+		return ERROR_LOG(SENC_ERROR_PARAMETER_ERROR, "SENC_KeyManager_BindCode: Parameter Null");
+
+	//handle转为结构体指针
+	pstEncDev = SencHandle2Ptr(SencDevHandle);  //指针转换
+	if (pstEncDev->OpenSign == FALSE)
+		return ERROR_LOG(SENC_ERROR_DEVICE_CLOSED, "SENC_KeyManager_BindCode: Device Closed");
+
+	return SENC_CMD_KeyManager_BindCode(pstEncDev, KBBindCode, KBBindCodeLen, CaCert, CaCertLen, KeyBagCert, KeyBagCertLen, BindCodePlain, PhoneNumber, BindCodeCipher, BindCodeCipherLen);
+}
+
+//创建Circle
+unsigned int SENC_KeyManager_CreateCircle(SENCHANDLE IN SencDevHandle,
+										  KeybagCreateCircleReq IN KBCreateCircleReq,
+										  uint32_t IN KBCreateCircleReqLen,
+										  uint8_t* IN BindCodeVrfPkgCipher,
+										  uint32_t IN BindCodeVrfPkgCipherLen,
+										  uint32_t* OUT TimeStamp,
+										  KeybagCircle* OUT KBCircle,
+										  uint32_t* OUT KBCircleLen)
+{
+	SENCryptCard* pstEncDev = NULL;
+
+	if (!SencDevHandle)
+		return ERROR_LOG(SENC_ERROR_DEVICE_NOT_FOUND, "SENC_KeyManager_CreateCircle: Device Not Found");
+	if (!BindCodeVrfPkgCipher || !TimeStamp || !KBCircle || !KBCircleLen)
+		return ERROR_LOG(SENC_ERROR_PARAMETER_ERROR, "SENC_KeyManager_CreateCircle: Parameter Null");
+
+	//handle转为结构体指针
+	pstEncDev = SencHandle2Ptr(SencDevHandle);  //指针转换
+	if (pstEncDev->OpenSign == FALSE)
+		return ERROR_LOG(SENC_ERROR_DEVICE_CLOSED, "SENC_KeyManager_CreateCircle: Device Closed");
+
+	return SENC_CMD_KeyManager_CreateCircle(pstEncDev, KBCreateCircleReq, KBCreateCircleReqLen, BindCodeVrfPkgCipher, BindCodeVrfPkgCipherLen, TimeStamp, KBCircle, KBCircleLen);
+}
+
+//加入Circle
+unsigned int SENC_KeyManager_JoinCircle(SENCHANDLE IN SencDevHandle,
+										KeybagCircle IN KBOldCircle,
+										uint32_t IN KBOldCircleLen,
+										KeybagJoinCircleApprove IN KBJoinCircleApprove,
+										uint32_t IN KBJoinCircleApproveLen,
+										uint8_t* IN BindCodeVrfPkgCipher,
+										uint32_t IN BindCodeVrfPkgCipherLen,
+										uint32_t* OUT TimeStamp,
+										KeybagCircle* OUT KBNewCircle,
+										uint32_t* OUT KBNewCircleLen)
+{
+	SENCryptCard* pstEncDev = NULL;
+
+	if (!SencDevHandle)
+		return ERROR_LOG(SENC_ERROR_DEVICE_NOT_FOUND, "SENC_KeyManager_JoinCircle: Device Not Found");
+	if (!BindCodeVrfPkgCipher || !TimeStamp || !KBNewCircle || !KBNewCircleLen)
+		return ERROR_LOG(SENC_ERROR_PARAMETER_ERROR, "SENC_KeyManager_JoinCircle: Parameter Null");
+
+	//handle转为结构体指针
+	pstEncDev = SencHandle2Ptr(SencDevHandle);  //指针转换
+	if (pstEncDev->OpenSign == FALSE)
+		return ERROR_LOG(SENC_ERROR_DEVICE_CLOSED, "SENC_KeyManager_JoinCircle: Device Closed");
+
+	return SENC_CMD_KeyManager_JoinCircle(pstEncDev, KBOldCircle, KBOldCircleLen, KBJoinCircleApprove, KBJoinCircleApproveLen, BindCodeVrfPkgCipher, BindCodeVrfPkgCipherLen, TimeStamp, KBNewCircle, KBNewCircleLen);
+}
 
 #endif

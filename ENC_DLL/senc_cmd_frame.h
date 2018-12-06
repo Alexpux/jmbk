@@ -21,6 +21,7 @@
 #define			SENC_CMD_ALTERNATIVE_PBKDF2										0xF2
 #define			SENC_CMD_DATA_PROTECTION										0xF3
 #define			SENC_CMD_DOE_MANAGEMENT											0xF5
+#define			SENC_CMD_KEY_MANAGEMENT											0xF6
 
 #define			DP_SIGN_USER_PUB_KEY											0x01
 #define			DP_GEN_WEB_KEY													0x02
@@ -36,6 +37,11 @@
 #define			DP_GET_INIT_REQ													0x02
 #define			DP_CHIP_INIT													0x03
 #define			DP_GET_AUTH_PACKAGE												0x04
+
+#define			KM_CREATE_KEY_CHAIN												0x01
+#define			KM_SIGN_BIND_CODE												0x02
+#define			KM_CREATE_CIRCLE												0x03
+#define			KM_JOIN_CIRCLE													0x04
 
 #define			DP_SET_CALC_KEY													0x10
 #define			DP_SCK_MAC														0x01
@@ -826,6 +832,52 @@ unsigned int SENC_CMD_DataProtector_ChipInit(SENCryptCard* IN sencDev,
 //从板卡获取认证管理员锁数据包
 unsigned int SENC_CMD_DataProtector_GetAuthPackage(SENCryptCard* IN sencDev,
 												   AuthAdminKey* OUT pkg);
+//创建KeyChain
+unsigned int SENC_CMD_KeyManager_CreateKeyChain(SENCryptCard* IN sencDev, 
+												KeychainCreateReq IN KCCreateReq,
+												uint32_t IN KCCreateReqLen,
+												uint8_t* IN CaCert,
+												uint32_t IN CaCertLen,
+												uint8_t* IN FirmailCert,
+												uint32_t IN FirmailCertLen,
+												uint8_t* IN KeyBagId,
+												KeychainCreateCode* OUT KCCreateCode,
+												uint32_t* OUT KCCreateCodeLen);
+
+//签发BindCode
+unsigned int SENC_CMD_KeyManager_BindCode(SENCryptCard* IN sencDev,
+										  KeybagBindCode IN KBBindCode,
+										  uint32_t IN KBBindCodeLen,
+										  uint8_t* IN CaCert,
+										  uint32_t IN CaCertLen,
+										  uint8_t* IN KeyBagCert,
+										  uint32_t IN KeyBagCertLen,
+										  uint8_t* OUT BindCodePlain,
+										  uint8_t* OUT PhoneNumber,
+										  uint8_t* OUT BindCodeCipher,
+										  uint32_t* OUT BindCodeCipherLen);
+
+//创建Circle
+unsigned int SENC_CMD_KeyManager_CreateCircle(SENCryptCard* IN sencDev,
+											  KeybagCreateCircleReq IN KBCreateCircleReq,
+											  uint32_t IN KBCreateCircleReqLen,
+											  uint8_t* IN BindCodeVrfPkgCipher,
+											  uint32_t IN BindCodeVrfPkgCipherLen,
+											  uint32_t* OUT TimeStamp,
+											  KeybagCircle* OUT KBCircle,
+											  uint32_t* OUT KBCircleLen);
+
+//加入Circle
+unsigned int SENC_CMD_KeyManager_JoinCircle(SENCryptCard* IN sencDev,
+											KeybagCircle IN KBOldCircle,
+											uint32_t IN KBOldCircleLen,
+											KeybagJoinCircleApprove IN KBJoinCircleApprove,
+											uint32_t IN KBJoinCircleApproveLen,
+											uint8_t* IN BindCodeVrfPkgCipher,
+											uint32_t IN BindCodeVrfPkgCipherLen,
+											uint32_t* OUT TimeStamp,
+											KeybagCircle* OUT KBNewCircle,
+											uint32_t* OUT KBNewCircleLen);
 
 
 #endif

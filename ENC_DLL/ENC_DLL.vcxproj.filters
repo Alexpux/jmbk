@@ -87,9 +87,6 @@
     <ClInclude Include="senc_error.h">
       <Filter>头文件\helper</Filter>
     </ClInclude>
-    <ClInclude Include="devcacli.h">
-      <Filter>头文件\helper</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="senc_aes.cpp">

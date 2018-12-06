@@ -42,23 +42,23 @@ extern "C"
 
 #define SENC_RSA_PARAMETER_LEN 128
 
-#define		JMBK_CERT_PATH			"./证书/st.device.cer"		//加密板卡设备证书
-#define		JMBK_CERT_CSR_PATH		"./证书/devcertcsr"			//加密板卡设备CSR
-#define		DEVICECA_CERT_PATH		"./证书/st.device.ca.cer"	//设备CA证书
-#define		ROOTCA_CERT_PATH		"./证书/st.root.ca.cer"		//根证书
+#define	JMBK_CERT_PATH			"./证书/st.device.cer"		//加密板卡设备证书
+#define	JMBK_CERT_CSR_PATH		"./证书/devcertcsr"			//加密板卡设备CSR
+#define	DEVICECA_CERT_PATH		"./证书/st.device.ca.cer"	//设备CA证书
+#define	ROOTCA_CERT_PATH		"./证书/st.root.ca.cer"		//根证书
 
-#define		JMJ_CERT_PATH			"./证书/st.device.cer"		//加密板卡设备证书
-#define		JMJ_PRIKEY_PATH			"./证书/st.device.pri"		//加密机私钥
+#define	JMJ_CERT_PATH			"./证书/st.device.cer"		//加密板卡设备证书
+#define	JMJ_PRIKEY_PATH			"./证书/st.device.pri"		//加密机私钥
 
 #define DEFAULT_SM2_SIGN_USER_ID			"1234567812345678"
 #define DEFAULT_SM2_SIGN_USER_ID_LEN		16
 #define SM3_DIGEST_LENGTH					32
+
+#define RTC_TIME_PIN_CODE					"\x00\x11\x22\x33\x44\x55\x66\x77"
+#define RTC_TIME_PIN_CODE_LEN				8
 // IMPLEMENT_DYNAMIC(SencPT_Dlg, CDialogEx)
 
 //自定义写死数据
-static unsigned char innerkey1[] =
-"\x44\x44\x44\x44\x44\x44\x44\x44\x44\x44\x44\x44\x44\x44\x44\x44"
-"\x44\x44\x44\x44\x44\x44\x44\x44\x44\x44\x44\x44\x44\x44\x44\x44";
 const static unsigned char _seed[] =
 "\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11"
 "\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11";
@@ -69,33 +69,17 @@ const static unsigned char _seed2[] = {
 	0x56, 0xD5, 0x5C, 0x3B, 0x40, 0x72, 0x7B, 0xC1, 0x58, 0xE2, 0xF5, 0x5E, 0x6D, 0x85, 0x5B, 0xBB, 
 	0xA1, 0x8E, 0x27, 0xAA, 0x4C, 0xC7, 0xDB, 0x0A, 0xB3, 0xB7, 0xA0, 0x3D, 0x9E, 0xD8, 0x5C, 0x15 };
 
-static unsigned char aes_key[] = {
+static unsigned char sm4_key[] = {
 	0x54, 0x5D, 0xBA, 0x6B, 0xE5, 0xA2, 0x45, 0x40, 0xA1, 0xCE, 0x99, 0xC6, 0xFB, 0xED, 0xCC, 0xE8 };
-static unsigned char aes_iv[16] = {
+static unsigned char sm4_iv[16] = {
 	0x3E, 0x62, 0xBB, 0x39, 0x1F, 0xDF, 0xDB, 0x2F, 0x33, 0x08, 0x71, 0x04, 0xEF, 0xC9, 0xB5, 0xF7};
-static unsigned char aes_iv2[16] = {
-	0x3E, 0x62, 0xBB, 0x39, 0x1F, 0xDF, 0xDB, 0x2F, 0x33, 0x08, 0x71, 0x04, 0xEF, 0xC9, 0xB5, 0xF7};
-static unsigned char aes_data[376] = {
-	0x20, 0x18, 0x11, 0x29, 0x20, 0xad, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-	0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 
-	0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 
-	0x78, 0x6e, 0xea, 0xed, 0x28, 0xd1, 0x60, 0x24, 0xd4, 0xa7, 0xb6, 0xb6, 0x75, 0xc8, 0x64, 0x54, 
-	0x10, 0xac, 0x30, 0xf9, 0xc8, 0x10, 0x27, 0x86, 0xef, 0x60, 0x16, 0x6c, 0xdb, 0xab, 0xff, 0x00, 
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-	0x00, 0x02, 0x02, 0x00, 0x00, 0x01, 0x00, 0x00, 0x48, 0xc1, 0x24, 0x9f, 0x50, 0xae, 0x11, 0xd6, 
-	0xb0, 0x9f, 0x68, 0x18, 0xc1, 0xfd, 0x14, 0x17, 0xa2, 0x28, 0xa1, 0x07, 0x84, 0x90, 0xe3, 0x5e, 
-	0xbf, 0x42, 0x96, 0x87, 0xa5, 0xce, 0x22, 0x44, 0x3c, 0x58, 0x14, 0x89, 0x62, 0x02, 0xa5, 0x31, 
-	0xe5, 0x71, 0xd0, 0x65, 0xd4, 0x12, 0x79, 0x35, 0x01, 0x90, 0x47, 0xe3, 0x7d, 0xc1, 0x8a, 0x0f, 
-	0x46, 0xa8, 0x11, 0x26, 0x7b, 0x04, 0x09, 0xca };
 
 static unsigned char jmjpri[] =
-{ 0x78, 0x6E, 0xEA, 0xED, 0x28, 0xD1, 0x60, 0x24, 0xD4, 0xA7, 0xB6, 
-  0xB6, 0x75, 0xC8, 0x64, 0x54, 0x10, 0xAC, 0x30, 0xF9, 0xC8, 0x10, 
-  0x27, 0x86, 0xEF, 0x60, 0x16, 0x6C, 0xDB, 0xAB, 0xFF, 0x00 };
+{ 0x78, 0x6E, 0xEA, 0xED, 0x28, 0xD1, 0x60, 0x24, 0xD4, 0xA7, 0xB6, 0xB6, 0x75, 0xC8, 0x64, 0x54,
+  0x10, 0xAC, 0x30, 0xF9, 0xC8, 0x10, 0x27, 0x86, 0xEF, 0x60, 0x16, 0x6C, 0xDB, 0xAB, 0xFF, 0x00 };
 
 unsigned char Pri[33] = { 0 };
-unsigned char Pub[66] = { 0x04 };
+unsigned char Pub[66] = { 0 };
 
 unsigned char kenc[32] = { 0 };
 unsigned char kmac[32] = { 0 };
@@ -174,7 +158,7 @@ BOOL SencPT_Dlg::OnInitDialog()
 	TNumCtr.SetFont(tn);
 
 	mPrgsCtr.SetRange(0,100);
-	mPrgsCtr.SetStep(10);
+	mPrgsCtr.SetStep(5);
 	mPrgsCtr.SetPos(100);
 
 	GetModuleFileName(NULL,szFilePath,MAX_PATH);
@@ -589,8 +573,8 @@ int gen_pkg_for_device(_In_ ChipInitRequest ChipInitReq, _Out_ ChipInitCommand *
 
 	unsigned char session_key[48] = { 0 }; //会话密钥
 	size_t sesKeyCipherL = 256;			   //会话密钥长度
-	memcpy(session_key, aes_iv, 16);
-	memcpy(session_key + 16, aes_key, 16);
+	memcpy(session_key, sm4_iv, 16);
+	memcpy(session_key + 16, sm4_key, 16);
 
 	group = SM2_Init();
 	if (group == NULL)
@@ -690,7 +674,7 @@ int gen_pkg_for_device(_In_ ChipInitRequest ChipInitReq, _Out_ ChipInitCommand *
 		eckey);
 	if (ret != 1)
 	{
-		AfxMessageBox(_T("SM2_digest Failed:0x%08X\n", ret));
+		AfxMessageBox(_T("SM2_digest Failed\n"));
 		return 1;
 	}
 
@@ -786,8 +770,8 @@ int gen_pkg_for_device(_In_ ChipInitRequest ChipInitReq, _Out_ ChipInitCommand *
 	memset(srcd, 0, src_len);
 	memcpy(srcd, &chip_init_cmd_inner, sizeof(chip_init_cmd_inner));
 	sm4_context ctx;
-	sm4_setkey_enc(&ctx, aes_key);
-	sm4_crypt_cbc(&ctx, SM4_ENCRYPT, src_len, aes_iv, srcd, sms4_cbc_ret);
+	sm4_setkey_enc(&ctx, sm4_key);
+	sm4_crypt_cbc(&ctx, SM4_ENCRYPT, src_len, sm4_iv, srcd, sms4_cbc_ret);
 
 	memcpy(chip_init_cmd->cmdCipher, sms4_cbc_ret, src_len);
 	chip_init_cmd->cmdCipherLen = src_len;
@@ -840,7 +824,6 @@ DWORD WINAPI ProductionThread(LPVOID lpData)
 	dcc_cert_resp resp = {0};
 	SENCryptCardList *dList;
 	HANDLE dHandle;
-	AES_KEY aeskey;
 	int trigger=pThis->tardev%16;
 	//select the target dev if necessary
 	trigger=0;
@@ -884,15 +867,19 @@ DWORD WINAPI ProductionThread(LPVOID lpData)
 	do{
 #if 1
 #pragma region 生产过程	
+		//设置RTCTime
+		pThis->productCount++;
+		flag = 0;
+
+		uint64_t rtcTime = time(NULL);
+		flag = SENC_DataProtector_SetRTCTime(dHandle, (uint8_t*)RTC_TIME_PIN_CODE, RTC_TIME_PIN_CODE_LEN, &rtcTime);
+		if (flag != SENC_SUCCESS){
+			tempmsg.Format(_T("设置RTC时间失败，错误码为：0x%.8x\r\n"), flag);
+			break;
+		}
+		pThis->mPrgsCtr.StepIt();
+
 		//设置ID ，根据日期、时间、板卡生产编号
-		// 	data1[0]=(cctime.GetYear())>>8&0xff;
-		// 	data1[1]=(cctime.GetYear())&0xff;
-		// 	data1[2]=cctime.GetMonth()&0xff;
-		// 	data1[3]=cctime.GetDay()&0xff;
-		// 	data1[4]=(rand()*cctime.GetMinute())%0xff;
-		// 	data1[5]=(rand()*cctime.GetSecond())%0xff;
-		// 	data1[6]=pThis->productCount>>8&0xff;
-		// 	data1[7]=pThis->productCount&0xff;
 		data1[0]=(cctime.GetYear()/1000)<<4|((cctime.GetYear()/100)%10);//千位放在data1[0]高4位，百位放在data1[0]低4位
 		data1[1]=((cctime.GetYear()/10)%10)<<4|(cctime.GetYear()%10);//十位放在data1[1]高4位，个位放在data1[1]低4位
 		data1[2]=(cctime.GetMonth()/10)<<4|(cctime.GetMonth()%10);
@@ -901,16 +888,11 @@ DWORD WINAPI ProductionThread(LPVOID lpData)
 		data1[5]=(rand()*cctime.GetSecond())%0xff;
 		data1[6]=pThis->productCount>>8&0xff;
 		data1[7]=pThis->productCount&0xff;
-
-		pThis->productCount++;
-
-		flag = 0;
 		flag = SENC_Product_SetID(dHandle, data1, CHIPID_LENGTH);
 		if(flag != SENC_SUCCESS){
 			tempmsg.Format(_T("设置加密卡ID失败，错误码为：0x%.8x\r\n"), flag);
 			break;
 		}
-
 		pThis->mPrgsCtr.StepIt();
 
 		//设置版本号
@@ -1070,75 +1052,6 @@ DWORD WINAPI ProductionThread(LPVOID lpData)
 #pragma endregion
 
 
-		/*memset(tdata,0,sizeof(tdata));
-
-
-		unsigned int bits=2048;
-
-		memcpy(tdata, &bits, 4);
-		memcpy(tdata+4, rsakey->n->d,SENC_RSA_PARAMETER_LEN*2);
-		memcpy(tdata+4+SENC_RSA_PARAMETER_LEN*2, rsakey->e->d,4);
-		memcpy(tdata+4+SENC_RSA_PARAMETER_LEN*4, rsakey->d->d,SENC_RSA_PARAMETER_LEN*2);
-		memcpy(tdata+4+SENC_RSA_PARAMETER_LEN*6, rsakey->p->d,SENC_RSA_PARAMETER_LEN);
-		memcpy(tdata+4+SENC_RSA_PARAMETER_LEN*7, rsakey->q->d,SENC_RSA_PARAMETER_LEN);
-		memcpy(tdata+4+SENC_RSA_PARAMETER_LEN*8, rsakey->dmp1->d,SENC_RSA_PARAMETER_LEN);
-		memcpy(tdata+4+SENC_RSA_PARAMETER_LEN*9, rsakey->dmq1->d,SENC_RSA_PARAMETER_LEN);
-		memcpy(tdata+4+SENC_RSA_PARAMETER_LEN*10, rsakey->iqmp->d,SENC_RSA_PARAMETER_LEN);
-
-		for(int i = 0 ; i < 256 ; i++ ){
-			TestSend[i] = rand() & 0xff;
-		}
-		TestSend[0] = 0x00;
-		TestSend[255] = 0x00;
-
-		int t=0;
-		
-		while(t++<500){
-			flag = SENC_ProTest_RsaSignature(dHandle, tdata,1412, TestSend,256, TestRcv,&recvlen);
-			if(flag != SENC_SUCCESS){
-				tempmsg.Format(_T("RSA签名测试失败，错误码为：0x%.8x\r\n"), flag);
-				break;
-			}	
-
-
-			RSA_public_decrypt(256, TestRcv, TestDec, rsakey, RSA_NO_PADDING);
-			if(memcmp(TestSend, TestDec, 256) != 0){
-				tempmsg.Format(_T("RSA签名测试失败，解密数据不一致！"));
-				flag=0xffff;
-				break;
-			}
-		}
-		if(flag!=SENC_SUCCESS)
-			break;
-
-		pThis->mPrgsCtr.StepIt();
-
-		//aes
-		for(int i = 0 ; i < 32 ; i++ ){
-			tdata[i] = rand() & 0xff;
-		}
-		for(int i = 0 ; i < 256 ; i++ ){
-			TestSend[i] = rand() & 0xff;
-		}
-
-		flag = SENC_ProTest_AesEncrypt(dHandle, tdata,32, TestSend,256, TestRcv,&recvlen);
-		if(flag != SENC_SUCCESS){
-			tempmsg.Format(_T("AES加密测试失败，错误码为：0x%.8x\r\n"), flag);
-			break;
-		}
-
-		AES_set_decrypt_key(tdata, 256, &aeskey);
-		for(int i = 0 ; i < 256 ; i += 16 ){
-			AES_ecb_encrypt(TestRcv+i, TestDec+i, &aeskey, AES_DECRYPT);
-		}
-		if(memcmp(TestSend, TestDec, 256) != 0){
-			tempmsg.Format(_T("AES加密测试失败，解密数据不一致！"));
-			flag=0xffff;
-			break;
-		}
-		pThis->mPrgsCtr.StepIt();
-		*/
-
 #pragma region 生产测试过程
 		//读写测试
 		for(int i = 0 ; i < 256 ; i++ ){
@@ -1201,14 +1114,21 @@ DWORD WINAPI ProductionThread(LPVOID lpData)
 			tempmsg.Format(_T("获取板卡初始化状态失败，错误码为：0x%.8x\r\n"), flag);
 			break;
 		}
+		pThis->mPrgsCtr.StepIt();
+		tempmsg.Format(_T("获取板卡初始化状态成功\r\n"));
+		pThis->PostLog(tempmsg);
 
 		//获取板卡初始化请求包
 		ChipInitRequest ChipInitReq;
-		flag = SENC_DataProtector_GetInitReq(dHandle, &ChipInitReq, devcacert, &devcacertlen, devcert, &devcertlen,Pri,Pub+1);
+		flag = SENC_DataProtector_GetInitReq(dHandle, &ChipInitReq, devcacert, &devcacertlen, devcert, &devcertlen,Pri,Pub);
 		if (flag != SENC_SUCCESS){
 			tempmsg.Format(_T("获取初始化请求包失败，错误码为：0x%.8x\r\n"), flag);
 			break;
 		}
+		pThis->mPrgsCtr.StepIt();
+		tempmsg.Format(_T("获取初始化请求包成功\r\n"));
+		pThis->PostLog(tempmsg);
+
 #endif
 		//组建初始化命令包
 		ChipInitCommand chip_init_cmd = {0};
@@ -1217,6 +1137,10 @@ DWORD WINAPI ProductionThread(LPVOID lpData)
 			tempmsg.Format(_T("组建初始化命令包失败，错误码为：0x%.8x\r\n"), flag);
 			break;
 		}
+		pThis->mPrgsCtr.StepIt();
+		tempmsg.Format(_T("组建初始化命令包成功\r\n"));
+		pThis->PostLog(tempmsg);
+
 #if 1
 		//板卡执行初始化
 		unsigned char mock_key_cert[2048] = { 0 };
@@ -1228,6 +1152,9 @@ DWORD WINAPI ProductionThread(LPVOID lpData)
 			tempmsg.Format(_T("板卡执行初始化失败，错误码为：0x%.8x\r\n"), flag);
 			break;
 		}
+		pThis->mPrgsCtr.StepIt();
+		tempmsg.Format(_T("板卡执行初始化成功\r\n"));
+		pThis->PostLog(tempmsg);
 
 		//从板卡获取认证管理员锁数据包
 		AuthAdminKey pkg = { 0 };
@@ -1236,9 +1163,11 @@ DWORD WINAPI ProductionThread(LPVOID lpData)
 			tempmsg.Format(_T("从板卡获取认证管理员锁数据包失败，错误码为：0x%.8x\r\n"), flag);
 			break;
 		}
+		pThis->mPrgsCtr.StepIt();
+		tempmsg.Format(_T("从板卡获取认证管理员锁数据包成功\r\n"));
+		pThis->PostLog(tempmsg);
 
 		//验证数据包
-
 		unsigned char sm3buf[64] = { 0 };
 		memcpy(sm3buf, _seed, 32);
 		memcpy(sm3buf + 32, _seed1, 32);
@@ -1256,12 +1185,19 @@ DWORD WINAPI ProductionThread(LPVOID lpData)
 		unsigned char sm3_out[32] = { 0 };
 		sm3_hmac(kmac, 32, auth->rand, 32, sm3_out);
 		if (memcmp(auth->Mac, sm3_out, 32))
-			printf("Failed!");
+		{
+			tempmsg.Format(_T("验证认证管理员锁数据包失败\r\n"));
+			break;
+		}
+		pThis->mPrgsCtr.StepIt();
+		tempmsg.Format(_T("验证认证管理员锁数据包成功\r\n"));
+		pThis->PostLog(tempmsg);
+
 #pragma endregion
 #endif
 	}while(0);
 
-#if 0
+#if 1
 	SENC_Close(dHandle);
 	if(flag != SENC_SUCCESS){
 		tempmsg.MakeUpper();
@@ -1271,7 +1207,7 @@ DWORD WINAPI ProductionThread(LPVOID lpData)
 		return flag;
 	}
 
-	tempmsg.Format(_T("生产完成"));
+	tempmsg.Format(_T("生产并初始化完成"));
 	pThis->mPrgsCtr.SetPos(100);
 	pThis->PostFin(tempmsg);
 

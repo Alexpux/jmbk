@@ -7,8 +7,8 @@
 
 #include <stdint.h>
 
-#define			LIBSENC_VERSION              "1.0.1d (2017/12/19 15:00)"
-#define			LIBSENC_VERSION_STR          "libsenc version: 1.0.1d (2017/12/19 15:00)"
+#define			LIBSENC_VERSION              "1.0.1e (2018/12/5 15:00)"
+#define			LIBSENC_VERSION_STR          "libsenc version: 1.0.1e (2018/12/5 15:00)"
 
 #define __DATA_PROTECTOR_ON__
 #define __ALTER_ON__
@@ -166,15 +166,15 @@ typedef			void*			SENCHANDLE;
 
 //秘钥参数容器结构体 Attributes of Encryption Methods
 typedef struct tagEncryptAttr{
-	unsigned char	RSA_Mode;			//RSA加密类型 0x01 2048
-	unsigned char	RSA_PrikeyEncMode;	//RSA私钥加密类型 0x01 aes128ecb || 0x02 aes256ecb ||0x03 sm4
-	unsigned char	RSA_PrikeyEncIdx;	//私钥加密用对称秘钥索引	1-64
-	unsigned char	RSA_InternalKeyIdx;	//RSA内部秘钥索引 1-128
+	unsigned char	RSA_Mode;				//RSA加密类型 0x01 2048
+	unsigned char	RSA_PrikeyEncMode;		//RSA私钥加密类型 0x01 aes128ecb || 0x02 aes256ecb ||0x03 sm4
+	unsigned char	RSA_PrikeyEncIdx;		//私钥加密用对称秘钥索引	1-64
+	unsigned char	RSA_InternalKeyIdx;		//RSA内部秘钥索引 1-128
 	unsigned char	RSA_HashAlgorithm;		//哈希算法 0x01 sha1 || 0x02 sha256
 	unsigned char	RSA_PaddingMode;		//填充方式 0x01 NO_PADDING || 0x02 PKCS1 v1.5
-	unsigned char	AES_EncLength;		//AES加密类型 0x01 aes128 || 0x02 aes256
-	unsigned char	AES_EncMode;		//AES加密模式 0x01 ecb || 0x02 cbc
-	unsigned char	AES_EncIdx;			//AES秘钥索引 65-128
+	unsigned char	AES_EncLength;			//AES加密类型 0x01 aes128 || 0x02 aes256
+	unsigned char	AES_EncMode;			//AES加密模式 0x01 ecb || 0x02 cbc
+	unsigned char	AES_EncIdx;				//AES秘钥索引 65-128
 } EncryptAttr;
 
 
@@ -194,202 +194,318 @@ typedef struct tagCardInfo{
 typedef struct tagSENCryptCardList{
 
 	int	DevNums;		//设备数量
-	CardInfo*		devs[64];		//板卡列表
-	void*			ctx;			//libusb操作容器指针
-	int				InitFlag;		//列表初始化标识
+	CardInfo*		devs[64];			   //板卡列表
+	void*			ctx;				   //libusb操作容器指针
+	int				InitFlag;			   //列表初始化标识
 
 } SENCryptCardList;
 
-/*           数据保护模块相关                                               */
 
-#define ALGID_AES 0x00000001
-#define ALGID_RSA_PUB 0x00010100
-#define ALGID_RSA_PRI 0x00020100
-#define ALGID_SM2_PUB 0x00010200
-#define ALGID_SM2_PRI 0x00020200
+/************************************		数据许可模块 相关		****************************************/
+/************************************		数据许可模块 相关		****************************************/
+//密钥算法类型、种类
+#define ALGID_AES			0x00000001         // AES密钥
+#define ALGID_SM4			0x00000002		   // SM4密钥
+#define ALGID_RSA_PUB		0x00010100         // RSA公钥
+#define ALGID_RSA_PRI		0x00020100         // RSA私钥
+#define ALGID_SM2_PUB		0x00010200         // SM2公钥
+#define ALGID_SM2_PRI		0x00020200         // SM2私钥
 
+//有效标志（Flag）定义
+#define FLAG_START_TIME		0x00000001		   //有效开始时间
+#define FLAG_END_TIME		0x00000002		   //有效结束时间
+#define FLAG_SPAN_TIME		0x00000004		   //有效时间段
+#define FLAG_TIMES			0x00000008		   //有效次数
+
+//策略（Policy）定义
+#define POLICY_INHERIT      0x00000001         // 允许继承
+#define POLICY_DECRYPT	    0x00000002         // 允许解密
+#define POLICY_ENCRYPT	    0x00000004         // 允许加密
+#define POLICY_PRINT        0x00001000         // 允许打印
+#define POLICY_EXPORT       0x00002000         // 允许导出明文
+#define POLICY_UNREVOKABLE  0x00004000         // 不可撤销的
+
+#define	CHIPID_LENGTH		16				   //板卡ID长度
+#define	KEYBAGID_LENGTH		8				   //KeyBag ID长度
+#define	BINDCODE_PLAIN_LEN	16				   //绑定码明文长度
+#define	PHONE_NUMBER_LEN	16				   //手机号码长度
 
 //秘钥记录请求
 typedef struct tagKeyRecordRequest{
-	uint32_t Version;
-	uint32_t Reserved;
-	uint8_t KeyID[16];
-	uint8_t OwnerUserID[16];
-	uint8_t OwnerKeyFingerprint[32];
-	uint8_t DevlpID[8];
-	uint8_t AppID[8];
-	int64_t timeStamp;
-	uint32_t Flag;
-	uint32_t bits;
-	int64_t stTime;
-	int64_t endTime;
-	uint8_t Signature[256];
+	uint32_t Version;					// 版本号
+	uint32_t Reserved;					// 保留字，用于结构体对齐
+	uint8_t KeyID[16];					// 密钥ID
+	uint8_t OwnerUserID[16];			// 密钥所有者ID
+	uint8_t OwnerKeyFingerprint[32];	// 密钥所有者的公钥的指纹
+	uint8_t DevlpID[8];					// APP开发商ID
+	uint8_t AppID[8];					// APP ID
+	int64_t timeStamp;					// 密钥请求生成的时间，5分钟之后失效
+	uint32_t Flag;						// 密钥类型，算法
+	uint32_t bits;						// 密钥bit长度
+	int64_t stTime;						// 密钥有效开始时间
+	int64_t endTime;					// 密钥有效结束时间
+	uint8_t Signature[256];				// 用户签名，SS端生成，硬件验证
 } KeyRecordRequest;
 
 //秘钥记录
 typedef struct tagKeyRecord{
-	uint32_t Version;
-	uint32_t Reserved;
-	uint8_t KeyID[16];
-	uint8_t OwnerUserID[16];
-	uint8_t OwnerKeyFingerprint[32];
-	uint8_t DevlpID[8];
-	uint8_t AppID[8];
-	int64_t stTime;
-	int64_t endTime;
-	uint32_t Flag;
-	uint32_t bits;
-	uint8_t Key_C_enc[40];
-	uint8_t Mac[32];
+	uint32_t Version;					// 版本号
+	uint32_t Reserved;					// 保留字，用于结构体手动对齐
+	uint8_t KeyID[16];					// 密钥ID
+	uint8_t OwnerUserID[16];			// 密钥所有者ID
+	uint8_t OwnerKeyFingerprint[32];	// 密钥所有者的公钥的指纹
+	uint8_t DevlpID[8];					// APP开发商ID
+	uint8_t AppID[8];					// APP ID
+	int64_t stTime;						// 密钥有效开始时间
+	int64_t endTime;					// 密钥有效结束时间
+	uint32_t Flag;						// 密钥类型，算法
+	uint32_t bits;						// 密钥bit长度
+	uint8_t Key_C_enc[40];				// 卡内部密钥加密的云端密钥
+	uint8_t Mac[32];					// 密钥记录的校验码，由硬件计算，硬件验证
 }KeyRecord;
 
 //用户公钥信息
 typedef struct tagUserPubKey{
-	uint32_t Version;
-	uint8_t OwnerUserID[16];
-	uint32_t Reserved;
-	int64_t timeStamp;
-	uint32_t Flag;
-	uint32_t bits;
-	uint32_t KeyLen;
-	uint8_t KeyValue[300];
-	uint8_t Mac[32];
+	uint32_t Version;					// 版本号
+	uint8_t OwnerUserID[16];			// 密钥所有者ID
+	uint32_t Reserved;					// 保留字，用于结构体对齐
+	int64_t timeStamp;					// 密钥生成时间
+	uint32_t Flag;						// 密钥类型，算法
+	uint32_t bits;						// 密钥bit长度
+	uint32_t KeyLen;					// keyValue中的有效密钥长度
+	uint8_t KeyValue[300];				// 用户公钥
+	uint8_t Mac[32];					// 用户公钥的校验码，由硬件计算，硬件验证
 }UserPubKey;
-
-#define FLAG_START_TIME 0x00000001
-#define FLAG_END_TIME 0x00000002
-#define FLAG_SPAN_TIME 0x00000004
-#define FLAG_TIMES 0x00000008
-
-#define POLICY_INHERIT 0x00000001
-#define POLICY_DECRYPT 0x00000002
-#define POLICY_PRINT 0x00001000
-#define POLICY_EXPORT 0x00002000
 
 //许可条款
 typedef struct tagLicenseLimited{
-	uint32_t Version;
-	uint32_t Flag;
-	int64_t stTime;
-	int64_t endTime;
-	int64_t fsTime;
-	int64_t spanTime;
-	int64_t times;
-	uint32_t Policy;
-	uint32_t Reserved;
+	uint32_t Version;					// 版本号
+	uint32_t Flag;						// 标志位，标识后续条款的有效性
+	int64_t stTime;						// 起始时间
+	int64_t endTime;					// 结束时间
+	int64_t fsTime;						// 第一次使用时间
+	int64_t spanTime;					// 可用时间段
+	int64_t times;						// 可用次数
+	uint32_t Policy;					// 策略，标识读，写，打印，继承，导出
+	uint32_t Reserved;					// 保留字，用于结构体对齐
 }LicenseLimited;
 
 //许可信息
 typedef struct tagLicense{
-	uint32_t Version;
-	uint8_t LicID[16];
-	uint8_t FatherLicID[16];
-	uint8_t IssuerUserID[16];
-	uint8_t OwnerUserID[16];
-	uint8_t OwnerKeyFingerprint[32];
-	uint8_t KeyID[16];
-	uint32_t Reserved;
-	LicenseLimited licLimited;
-	uint8_t Mac[32];
+	uint32_t Version;					// 版本号
+	uint8_t LicID[16];					// 许可ID
+	uint8_t FatherLicID[16];			// 父许可ID
+	uint8_t IssuerUserID[16];			// 许可签发者ID
+	uint8_t OwnerUserID[16];			// 许可所有者ID
+	uint8_t OwnerKeyFingerprint[32];	// 许可所有者的公钥的指纹
+	uint8_t KeyID[16];					// 被授权的密钥ID
+	uint32_t Reserved;					// 保留字，用于结构体手动对齐
+	LicenseLimited licLimited;			// 许可条款
+	uint8_t Mac[32];					// 许可信息校验码，由硬件计算，硬件验证
 }License;
 
 //许可请求
 typedef struct tagLicenseRequest{
-	uint32_t Version;
-	uint8_t FatherLicID[16];
-	uint8_t OwnerUserID[16];
-	uint8_t OwnerKeyFingerprint[32];
-	uint8_t KeyID[16];
-	uint32_t Reserved;
-	int64_t timeStamp;
-	LicenseLimited licLimited;
-	uint8_t Signature[256];
+	uint32_t Version;					// 版本号
+	uint8_t FatherLicID[16];			// 父许可ID
+	uint8_t OwnerUserID[16];			// 许可所有者ID
+	uint8_t OwnerKeyFingerprint[32];	// 许可所有者的公钥的指纹
+	uint8_t KeyID[16];					// 被授权的密钥ID
+	uint32_t Reserved;					// 保留字，用于结构体手动对齐
+	int64_t timeStamp;					// 许可请求生成的时间生成时间，5分钟之后失效
+	LicenseLimited licLimited;			// 许可条款
+	uint8_t Signature[256];				// 用户签名，SS端生成，硬件验证
 }LicenseRequest;
 
 //密文数据包
 typedef struct tagS1Cipher{
-	uint32_t Version;
-	uint32_t Len;
-	uint8_t Cipher[256];
+	uint32_t Version;					// 版本号
+	uint32_t Len;						// 密文长度
+	uint8_t Cipher[256];				// 密文内容
 }S1Cipher;
 
 //秘钥记录有效期
 typedef struct tagKeyPeriod{
-	uint32_t Version;
-	uint8_t	KeyID[16];
-	uint32_t Reserved;
-	int64_t timeStamp;
-	int64_t stTime;
-	int64_t endTime;
-	uint8_t Signature[256];
+	uint32_t Version;					// 版本号
+	uint8_t	KeyID[16];					// 密钥ID
+	uint32_t Reserved;					// 保留字，用于结构体手动对齐
+	int64_t timeStamp;					// 有效期数据生成时间，5分钟之后失效
+	int64_t stTime;						// 起始时间
+	int64_t endTime;					// 结束时间
+	uint8_t Signature[256];				// 用户签名，SS端生成，硬件验证
 }KeyPeriod;
 
-#define	   CHIPID_LENGTH		16
+
 //板卡初始化请求包
 typedef struct tagChipInitRequest{
-	uint32_t Version;         //版本号
-	uint8_t chipId[CHIPID_LENGTH];       //板卡ID
-	uint32_t Flag;            //用于签名的密钥类型、算法
-	uint32_t bits;            //用于签名的密钥bit长度
-	uint8_t Signaute[256]; //使用板卡的设备私钥对以上数据的签名（SHA256withRSA算法）
+	uint32_t Version;					//版本号
+	uint8_t chipId[CHIPID_LENGTH];      //板卡ID
+	uint32_t Flag;						//用于签名的密钥类型、算法
+	uint32_t bits;						//用于签名的密钥bit长度
+	uint8_t Signaute[256];				//使用板卡的设备私钥对以上数据的签名（SHA256withRSA算法）
 }ChipInitRequest;
 
-//板卡初始化命令包
+//板卡初始化命令包Inner
 typedef struct tagChipInitCommandInner{
 	uint8_t chipId[CHIPID_LENGTH];      //板卡ID
-	uint8_t Kseed[32];       //用于生成Kenc和Kmac的种子码
-	uint8_t CryptorPri[64];	 //加密机私钥（SM2）
-	uint32_t Flag;           //用于签名的密钥类型、算法
-	uint32_t bits;           //用于签名的密钥bit长度
-	uint8_t Signaute[256];   //使管理员锁的设备私钥对以上数据的签名（SHA256withRSA算法）
+	uint8_t Kseed[32];					//用于生成Kenc和Kmac的种子码
+	uint8_t CryptorPri[64];				//加密机私钥（SM2）
+	uint32_t Flag;						//用于签名的密钥类型、算法
+	uint32_t bits;						//用于签名的密钥bit长度
+	uint8_t Signaute[256];				//使管理员锁的设备私钥对以上数据的签名（SHA256withRSA算法）
 }ChipInitCommandInner;
 
 //板卡初始化命令包
 typedef struct tagChipInitCommand{
-	uint32_t Version;         //版本号
-	uint32_t Flag;            //用于加密会话密钥的密钥类型、算法
-	uint32_t bits;            //用于加密会话密钥的密钥bit长度
-	uint32_t sessionKeyFlag;  //会话密钥类型、算法
-	uint32_t sessionKeyBits;  //会话密钥bit长度
-	uint8_t sessionKeyCipher[256];    //会话密钥密文，使用板卡的设备证书加密，此处会话密钥的明文为[IV+KEY],其中IV长度固定16字节,KEY长度为（sessionKeyBits/8）,下面是加密CHIP_INIT_CMD_INNER的算法为AES256_CBC
-	uint32_t cmdCipherLen;      // CHIP_INIT_CMD_INNER的密文长度
-	uint8_t cmdCipher[512];   //CHIP_INIT_CMD_INNER的密文，使用会话密钥加密
+	uint32_t Version;					//版本号
+	uint32_t Flag;						//用于加密会话密钥的密钥类型、算法
+	uint32_t bits;						//用于加密会话密钥的密钥bit长度
+	uint32_t sessionKeyFlag;			//会话密钥类型、算法
+	uint32_t sessionKeyBits;			//会话密钥bit长度
+	uint8_t sessionKeyCipher[256];      //会话密钥密文，使用板卡的设备证书加密，此处会话密钥的明文为[IV+KEY],其中IV长度固定16字节,KEY长度为（sessionKeyBits/8）,下面是加密CHIP_INIT_CMD_INNER的算法为AES256_CBC
+	uint32_t cmdCipherLen;				// CHIP_INIT_CMD_INNER的密文长度
+	uint8_t cmdCipher[512];				//CHIP_INIT_CMD_INNER的密文，使用会话密钥加密
 }ChipInitCommand;
 
-//板卡认证管理员锁数据包
+//板卡认证管理员锁数据包Inner
 typedef struct tagAuthAdminKeyInner{
-	uint8_t rand[32];       //随机数
-	uint8_t  Mac[32];       //使用Kmac密钥对以上字段计算的MAC值
+	uint8_t rand[32];					//随机数
+	uint8_t  Mac[32];					//使用Kmac密钥对以上字段计算的MAC值
 }AuthAdminKeyInner;
 
 //板卡认证管理员锁数据包
 typedef struct tagAuthAdminKey{
-	uint32_t Version;         //版本号
-	uint32_t Flag;            // 密钥类型，算法
-	uint32_t bits;            // 密钥bit长度
-	uint32_t cipherLen;       //密文长度
-	uint8_t cipher[128];      //使用Kenc对AUTH_ADM_KEY_INNER加密得到的密文（AES256_ECB算法）
+	uint32_t Version;					//版本号
+	uint32_t Flag;						// 密钥类型，算法
+	uint32_t bits;						// 密钥bit长度
+	uint32_t cipherLen;					//密文长度
+	uint8_t cipher[128];				//使用Kenc对AUTH_ADM_KEY_INNER加密得到的密文（AES256_ECB算法）
 }AuthAdminKey;
 
-//管理员锁复制数据包
+//管理员锁复制数据包Inner
 typedef struct tagAdminKeyCopyCommandInner{
-	uint8_t Kseed[32];       //用于生成Kenc和Kmac的种子码
-	uint32_t Flag;           //用于签名的密钥类型、算法
-	uint32_t bits;           //用于签名的密钥bit长度
-	uint8_t Signaute[256];   //使就绪管理员锁的设备私钥对以上数据的签名（SHA256withRSA算法）
+	uint8_t Kseed[32];					//用于生成Kenc和Kmac的种子码
+	uint32_t Flag;						//用于签名的密钥类型、算法
+	uint32_t bits;						//用于签名的密钥bit长度
+	uint8_t Signaute[256];				//使就绪管理员锁的设备私钥对以上数据的签名（SHA256withRSA算法）
 }AdminKeyCopyCommandInner;
 
 //管理员锁复制数据包
 typedef struct tagAdminKeyCopyCommand{
-	uint32_t Version;         //版本号
-	uint32_t Flag;            //用于加密会话密钥的密钥类型、算法
-	uint32_t bits;            //用于加密会话密钥的密钥bit长度
-	uint32_t sessionKeyFlag;  //会话密钥类型、算法
-	uint32_t sessionKeyBits;  //会话密钥bit长度
-	uint8_t sessionKeyCipher[256];    //会话密钥密文，使用板卡的设备证书加密，此处会话密钥的明文为[IV+KEY],其中IV长度固定16字节,KEY长度为（sessionKeyBits/8）,下面是加密ADMIN_KEY_COPY_CMD_INNER的算法为AES256_CBC
-	uint32_t cmdCipherLen;      //ADMIN_KEY_COPY_CMD_INNER的密文长度
-	uint8_t cmdCipher[512];   //ADMIN_KEY_COPY_CMD_INNER的密文，使用会话密钥加密
+	uint32_t Version;					//版本号
+	uint32_t Flag;						//用于加密会话密钥的密钥类型、算法
+	uint32_t bits;						//用于加密会话密钥的密钥bit长度
+	uint32_t sessionKeyFlag;			//会话密钥类型、算法
+	uint32_t sessionKeyBits;			//会话密钥bit长度
+	uint8_t sessionKeyCipher[256];      //会话密钥密文，使用板卡的设备证书加密，此处会话密钥的明文为[IV+KEY],其中IV长度固定16字节,KEY长度为（sessionKeyBits/8）,下面是加密ADMIN_KEY_COPY_CMD_INNER的算法为AES256_CBC
+	uint32_t cmdCipherLen;				//ADMIN_KEY_COPY_CMD_INNER的密文长度
+	uint8_t cmdCipher[512];				//ADMIN_KEY_COPY_CMD_INNER的密文，使用会话密钥加密
 }AdminKeyCopyCommand;
+
+/************************************		秘钥管理-国密 相关		****************************************/
+/************************************		秘钥管理-国密 相关		****************************************/
+//KeyChain创建请求包
+typedef struct tagKeychainCreateReq
+{
+	uint32_t u32Magic;					// 魔数，值为0x6b636363，后续数据结构与此相同
+	uint32_t u32Version;				// 版本号，值为0x10000，后续数据结构与此相同
+	uint32_t u32Flags;
+	uint32_t u32TimeStamp;				//时间戳，单位秒
+	uint8_t  au8ID[16];					//KeyChain的ID
+	uint8_t au8KeyBadID[8];				//KeyBagID
+	uint8_t  au8AccessCodePubKey[64];   //SM2公钥，前32个字节为X分量，后32个字节为Y分量
+	uint8_t  au8Signature[256];			//Firmail服务器私钥对以上字段的签名，目前版本使用SM3withSM2签名
+} KeychainCreateReq;
+
+//KeyChain创建码
+typedef struct tagKeychainCreateCode
+{
+	uint32_t u32Magic;					// 魔数，值为0x6b636363，后续数据结构与此相同
+	uint32_t u32Version;				// 版本号，值为0x10000，后续数据结构与此相同
+	uint32_t u32Flags;
+	uint32_t u32TimeStamp;				//时间戳，单位秒
+	uint8_t  au8ID[16];					//KeyChain的ID
+	uint8_t au8KeyBadID[8];				//KeyBagID
+	uint8_t  au8AccessCodePubKey[64];   //SM2公钥，前32个字节为X分量，后32个字节为Y分量
+	uint8_t  au8Signature[256];			//加密机服务器私钥对以上字段的签名，目前版本使用SM3withSM2签名
+} KeychainCreateCode;
+
+//绑定验证码
+typedef struct tagKeybagBindCode
+{
+	uint32_t u32Magic;
+	uint32_t u32Version;
+	uint32_t u32Flags;
+	uint32_t u32TimeStamp;
+	uint8_t  au8KeyBagID[8];
+	uint8_t  au8PhoneNumber[16];		//手机号码，如不足16字节，后面以0填充
+	uint8_t  au8BindCode[256];			//使用加密机证书加密的BindCode密文（SM2），其明文为16字节的ASCII字符，若不足16字节后面以0填充
+	uint8_t  au8Signature[256];			//使用KeyBag设备私钥对以上字段的签名（SM3withSM2）
+} KeybagBindCode;
+
+//绑定验证码校验包
+typedef struct tagKeybagBindCodeVerify
+{
+	uint32_t u32Magic;
+	uint32_t u32Version;
+	uint32_t u32Flags;
+	uint32_t u32TimeStamp;
+	uint8_t  au8KeyBagID[8];
+	uint8_t  au8PhoneNumber[16];		//手机号码，如不足16字节，后面以0填充
+	uint8_t  au8BindCode[16];			//BindCode明文，为16字节的ASCII字符，若不足16字节用0补齐
+	uint8_t  au8Mac[32];				//使用Kmac密钥对以上字段进行HMAC-SM3运算得到的MAC值
+} KeybagBindCodeVerify;
+
+//创建Circle请求包
+typedef struct tagKeybagCreateCircleReq
+{
+	uint32_t u32Magic;
+	uint32_t u32Version;
+	uint32_t u32Flags;
+	uint32_t u32TimeStamp;
+	uint8_t  au8KeyBagID[8];
+	uint8_t  au8PhoneNumber[16];		//手机号码，如不足16字节，后面以0填充
+	uint8_t  au8BindCode[256];			//使用加密机证书加密的BindCode密文（SM2），其明文为16字节的ASCII字符，若不足16字节后面以0填充
+	uint8_t  au8SyncPubKey[64];			//同步公钥（SM2），前32个字节为X分量，后32个字节为Y分量
+	uint8_t  au8Signature[64];			//同步私钥对以上字段的签名（SM3withSM2），使用同步公钥验签（即au8SyncPubKey字段）
+} KeybagCreateCircleReq;
+
+//Circle数据结构-CirclePubkey
+typedef struct tagKeybagCirclePubkey
+{
+	uint8_t  au8KeyBagID[8];			//KeyBagID
+	uint8_t  au8SyncPubKey[64];			//KeyBag的同步公钥
+} KeybagCirclePubkey;
+
+//Circle数据结构-Circle
+typedef struct tagKeybagCircle
+{
+	uint32_t u32Magic;
+	uint32_t u32Version;
+	uint32_t u32Flags;
+	uint32_t u32TimeStamp;
+	uint8_t  au8PhoneNumber[16];		//手机号码，如不足16字节，后面以0填充
+	uint8_t  au8Uuid[16];				//CircleID，绑定第一个keyBag时由加密机内部生成的一个UUID，如果是添加第二个第三个...时，则来自老Circle包中
+	uint32_t u32Count;					//KeyBag同步公钥数组中元素个数
+	KeybagCirclePubkey *kcPubKey;		//KeyBag同步公钥数组，一个Circle里可以有多个KeyBag
+	uint8_t  au8Signature[256];			//加密机服务器私钥对以上字段的签名，目前版本使用SM3withSM2签名
+} KeybagCircle;
+
+//加入Circle审批包
+typedef struct tagKeybagJoinCircleApprove
+{
+	uint32_t u32Magic;
+	uint32_t u32Version;
+	uint32_t u32Flags;
+	uint32_t u32TimeStamp;
+	uint8_t  au8KeyBagID[8];
+	uint8_t  au8PhoneNumber[16];
+	uint8_t  au8Uuid[16];				//老Circle的UUID
+	uint8_t  au8BindCode[256];			//使用加密机证书加密的BindCode密文（RSA2048），其明文为16字节的ASCII字符，若不足16字节后面以0填充
+	uint8_t  au8SyncPubKey[64];			//新添加进来的KeyBag的同步公钥（SM2）
+	uint8_t  au8KeyBagIDApporver[8];	//审批的KeyBag的ID，需要通过该ID去老的Circle包中找到公钥来验签
+	uint8_t  au8Signature[64];			//使用审批的KeyBag的同步私钥的签名
+} KeybagJoinCircleApprove;
 
 
 #ifdef __cplusplus
@@ -531,17 +647,17 @@ RSA私钥加密模式		RSA_PrikeyEncMode	0x01 AES128 / 0x02 AES256 / 0x03 SM4
 数据PADDING模式		RSA_PaddingMode		0x01 NONE / 0x02 PKCS1 V1.5
 ************************************************/
 unsigned int SENC_RSA_PrivkeySignatureExternal(SENCHANDLE		IN	SencDevHandle,
-										EncryptAttr*	IN	inEncAttr,
-										unsigned char*	IN	IV,
-										unsigned int	IN	IVlen,
-										unsigned char*	IN	MAC,
-										unsigned int	IN	MACLen,
-										unsigned char*	IN	RsaPrivKeyData,
-										unsigned int	IN	RsaPrivKeyDataLen,
-										unsigned char*	IN	inData,
-										unsigned int	IN	inDataLen,
-										unsigned char*	OUT retSignedData,
-										unsigned int*	OUT	retSignedDataLen);
+											   EncryptAttr*	IN	inEncAttr,
+											   unsigned char*	IN	IV,
+											   unsigned int	IN	IVlen,
+											   unsigned char*	IN	MAC,
+											   unsigned int	IN	MACLen,
+											   unsigned char*	IN	RsaPrivKeyData,
+											   unsigned int	IN	RsaPrivKeyDataLen,
+											   unsigned char*	IN	inData,
+											   unsigned int	IN	inDataLen,
+											   unsigned char*	OUT retSignedData,
+											   unsigned int*	OUT	retSignedDataLen);
 
 /************************************************
 *函数：SENC_RSA_PrivkeySignatureInternal()
@@ -564,11 +680,11 @@ RSA秘钥索引			RSA_InternalKeyIdx	1-128
 数据PADDING模式		RSA_PaddingMode		0x01 NONE / 0x02 PKCS1 V1.5
 ************************************************/
 unsigned int SENC_RSA_PrivkeySignatureInternal(SENCHANDLE		IN	SencDevHandle,
-										EncryptAttr*	IN	inEncAttr,
-										unsigned char*	IN	InData,
-										unsigned int	IN	InDataLen,
-										unsigned char*	OUT RetSignedData,
-										unsigned int*	OUT	RetSignedDataLen);
+											   EncryptAttr*	IN	inEncAttr,
+											   unsigned char*	IN	InData,
+											   unsigned int	IN	InDataLen,
+											   unsigned char*	OUT RetSignedData,
+											   unsigned int*	OUT	RetSignedDataLen);
 
 /************************************************
 *函数：SENC_RSA_PrivkeyDecryptExternal()
@@ -597,17 +713,17 @@ RSA私钥加密模式		RSA_PrikeyEncMode	0x01 AES128 / 0x02 AES256 / 0x03 SM4
 数据PADDING模式		RSA_PaddingMode		0x01 NONE / 0x02 PKCS1 V1.5
 ************************************************/
 unsigned int SENC_RSA_PrivkeyDecryptExternal(SENCHANDLE		IN	SencDevHandle,
-									  EncryptAttr*		IN	inEncAttr,
-									  unsigned char*	IN	IV,
-									  unsigned int		IN	IVlen,
-									  unsigned char*	IN	MAC,
-									  unsigned int		IN	MAClen,
-									  unsigned char*	IN	RsaPrivKeyData,
-									  unsigned int		IN	RsaPrivKeyDataLen,
-									  unsigned char*	IN	inData,
-									  unsigned int		IN	inDataLen,
-									  unsigned char*	OUT retDecData,
-									  unsigned int*		OUT	retDecDataLen);
+											 EncryptAttr*		IN	inEncAttr,
+											 unsigned char*	IN	IV,
+											 unsigned int		IN	IVlen,
+											 unsigned char*	IN	MAC,
+											 unsigned int		IN	MAClen,
+											 unsigned char*	IN	RsaPrivKeyData,
+											 unsigned int		IN	RsaPrivKeyDataLen,
+											 unsigned char*	IN	inData,
+											 unsigned int		IN	inDataLen,
+											 unsigned char*	OUT retDecData,
+											 unsigned int*		OUT	retDecDataLen);
 
 /************************************************
 *函数：SENC_RSA_PrivkeyDecryptInternal()
@@ -628,11 +744,11 @@ RSA秘钥索引			RSA_InternalKeyIdx	1-128
 数据PADDING模式		RSA_PaddingMode		0x01 NONE / 0x02 PKCS1 V1.5
 ************************************************/
 unsigned int SENC_RSA_PrivkeyDecryptInternal(SENCHANDLE		IN	SencDevHandle,
-									  EncryptAttr*		IN	inEncAttr,
-									  unsigned char*	IN	InData,
-									  unsigned int		IN	InDataLen,
-									  unsigned char*	OUT RetDecData,
-									  unsigned int*		OUT	RetDecDataLen);
+											 EncryptAttr*		IN	inEncAttr,
+											 unsigned char*	IN	InData,
+											 unsigned int		IN	InDataLen,
+											 unsigned char*	OUT RetDecData,
+											 unsigned int*		OUT	RetDecDataLen);
 
 /************************************************
 *函数：SENC_RSA_PubkeyVerifyExternal()
@@ -1684,6 +1800,54 @@ unsigned int SENC_DataProtector_ChipInit(SENCHANDLE IN SencDevHandle,
 //从板卡获取认证管理员锁数据包
 unsigned int SENC_DataProtector_GetAuthPackage(SENCHANDLE IN SencDevHandle,
 											   AuthAdminKey* OUT pkg);
+
+//创建KeyChain
+unsigned int SENC_KeyManager_CreateKeyChain(SENCHANDLE IN SencDevHandle,
+											KeychainCreateReq IN KCCreateReq,
+											uint32_t IN KCCreateReqLen,
+											uint8_t* IN CaCert,
+											uint32_t IN CaCertLen,
+											uint8_t* IN FirmailCert,
+											uint32_t IN FirmailCertLen,
+											uint8_t* IN KeyBagId,
+											KeychainCreateCode* OUT KCCreateCode,
+											uint32_t* OUT KCCreateCodeLen);
+
+//签发BindCode
+unsigned int SENC_KeyManager_BindCode(SENCHANDLE IN SencDevHandle,
+									  KeybagBindCode IN KBBindCode,
+									  uint32_t IN KBBindCodeLen,
+									  uint8_t* IN CaCert,
+									  uint32_t IN CaCertLen,
+									  uint8_t* IN KeyBagCert,
+									  uint32_t IN KeyBagCertLen,
+									  uint8_t* OUT BindCodePlain,
+									  uint8_t* OUT PhoneNumber,
+									  uint8_t* OUT BindCodeCipher,
+									  uint32_t* OUT BindCodeCipherLen);
+
+//创建Circle
+unsigned int SENC_KeyManager_CreateCircle(SENCHANDLE IN SencDevHandle,
+										  KeybagCreateCircleReq IN KBCreateCircleReq,
+										  uint32_t IN KBCreateCircleReqLen,
+										  uint8_t* IN BindCodeVrfPkgCipher,
+										  uint32_t IN BindCodeVrfPkgCipherLen,
+										  uint32_t* OUT TimeStamp,
+										  KeybagCircle* OUT KBCircle,
+										  uint32_t* OUT KBCircleLen);
+
+//加入Circle
+unsigned int SENC_KeyManager_JoinCircle(SENCHANDLE IN SencDevHandle,
+										KeybagCircle IN KBOldCircle,
+										uint32_t IN KBOldCircleLen,
+										KeybagJoinCircleApprove IN KBJoinCircleApprove,
+										uint32_t IN KBJoinCircleApproveLen,
+										uint8_t* IN BindCodeVrfPkgCipher,
+										uint32_t IN BindCodeVrfPkgCipherLen,
+										uint32_t* OUT TimeStamp,
+										KeybagCircle* OUT KBNewCircle,
+										uint32_t* OUT KBNewCircleLen);
+
 
 #endif
 
