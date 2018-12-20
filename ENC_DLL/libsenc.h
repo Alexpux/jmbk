@@ -18,6 +18,8 @@
 #define FALSE 0
 #endif
 
+#define VERSION_CURRENT_VERSION            0x00010000
+#define MAGIC_DATA						   0x6b636363
 
 //通用错误码 General Error Code
 #define			SENC_SUCCESS													0x00000000
@@ -81,10 +83,14 @@
 #define			SENC_ERROR_ECSTATE_READ_ERROR									0x1000000B	/*板卡读错误*/
 #define			SENC_ERROR_ECSTATE_SESSION_KEY_ERROR							0x1000000C	/*会话秘钥错误*/
 #define			SENC_ERROR_ECSTATE_PROTOCOL_ATTRIBUTE_ERROR						0x1000000D	/*板卡协议数据参数错误*/
+#define			SENC_ERROR_ECSTATE_INIT_STATUS_ERROR							0x1000000E	/*板卡初始化状态错误*/
 #define			SENC_ERROR_ECSTATE_ALGORITHM_RANDOM_NUM_ERROR					0x10001001	/*板卡算法随机数错误*/
 #define			SENC_ERROR_ECSTATE_ALGORITHM_AES_ERROR							0x10001002	/*板卡AES算法错误*/
 #define			SENC_ERROR_ECSTATE_ALGORITHM_RSA_ERROR							0x10001003	/*板卡RSA算法错误*/
 #define			SENC_ERROR_ECSTATE_ALGORITHM_DES_ERROR							0x10001004	/*板卡DES算法错误*/
+#define			SENC_ERROR_ECSTATE_ALGORITHM_SM2_ERROR							0x10001005	/*板卡SM2算法错误*/
+#define			SENC_ERROR_ECSTATE_ALGORITHM_SM3_ERROR							0x10001006	/*板卡SM3算法错误*/
+#define			SENC_ERROR_ECSTATE_ALGORITHM_SM4_ERROR							0x10001007	/*板卡SM4算法错误*/
 #define			SENC_ERROR_ECSTATE_IC_CARD_NOT_EXIST							0x10002001	/*板卡IC卡不存在*/
 #define			SENC_ERROR_ECSTATE_IC_CARD_VERIFIED								0x10002002	/*板卡IC卡已验证*/
 #define			SENC_ERROR_ECSTATE_MASTER_CARD_NOT_ADDED						0x10003001	/*板卡管理卡未添加*/
@@ -97,11 +103,70 @@
 #define			SENC_ERROR_ECSTATE_DONGLE_NOT_EXIST								0x10004002	/*板卡锁不存在*/
 #define			SENC_ERROR_ECSTATE_DONGLE_ID_ERROR								0x10004003	/*板卡锁ID错误*/
 #define			SENC_ERROR_ECSTATE_DONGLE_VERIFY_FAILED							0x10004004	/*板卡锁认证错误*/
-#define			SENC_ERROR_ECSTATE_KEY_INDEX_ERROR								0x10005001	/*板卡秘钥索引错误*/
-#define			SENC_ERROR_ECSTATE_KEY_ALG_TYPE_ERROR							0x10005002	/*板卡秘钥算法类型错误*/
-#define			SENC_ERROR_ECSTATE_KEY_NOT_EXIST								0x10005003	/*板卡秘钥不存在*/
-#define			SENC_ERROR_ECSTATE_KEY_EXISTED									0x10005004	/*板卡秘钥已存在*/
-#define			SENC_ERROR_ECSTATE_KEY_STORAGE_FULL								0x10005005	/*板卡秘钥满*/
+#define			SENC_ERROR_ECSTATE_DONGLE_FULL									0x10004005	/*板卡锁已满3个*/
+#define			SENC_ERROR_ECSTATE_KEY_INDEX_ERROR								0x10005001	/*板卡密钥索引错误*/
+#define			SENC_ERROR_ECSTATE_KEY_ALG_TYPE_ERROR							0x10005002	/*板卡密钥算法类型错误*/
+#define			SENC_ERROR_ECSTATE_KEY_NOT_EXIST								0x10005003	/*板卡密钥不存在*/
+#define			SENC_ERROR_ECSTATE_KEY_EXISTED									0x10005004	/*板卡密钥已存在*/
+#define			SENC_ERROR_ECSTATE_KEY_STORAGE_FULL								0x10005005	/*板卡密钥满*/
+#define			SENC_ERROR_ECSTATE_KEY_RSA_READ									0x10005006	/*读取RSA密钥失败*/
+#define			SENC_ERROR_ECSTATE_KEY_RSA_DER									0x10005007	/*RSA密钥der编解码失败*/
+#define			SENC_ERROR_ECSTATE_KEY_RSA_PUBMOD								0x10005008	/*RSA公钥模运算失败*/
+#define			SENC_ERROR_ECSTATE_KEY_RSA_SHA_TYPE								0x10005009	/*RSA验签-哈希类型不支持*/
+#define 		SENC_ERROR_ECSTATE_KEY_RSA_MOV_PADING							0x1000500a	/*RSA签名去除填充失败*/
+#define			SENC_ERROR_ECSTATE_KEY_RSA_SHA_DATA								0x1000500b	/*RSA验签-哈希数据不正确*/																							 
+#define			SENC_ERROR_ECSTATE_CERT_LEN_ERROR								0x10006001	/*证书长度错误*/
+#define			SENC_ERROR_ECSTATE_CERT_NOT_EXIT								0x10006002	/*证书不存在*/
+#define			SENC_ERROR_ECSTATE_CERT_VERIFY_SIGN_ERROR						0x10006003	/*证书验签名错误*/
+#define			SENC_ERROR_ECSTATE_CERT_VERIFY_CERT_ERROR						0x10006004	/*证书验证书错误*/
+#define			SENC_ERROR_ECSTATE_CERT_EXISTED									0x10006005	/*证书已存在*/
+#define			SENC_ERROR_ECSTATE_CERT_TYPE_ERROR								0x10006006  /*证书类型错误*/
+#define			SENC_ERROR_ECSTATE_CERT_GET_PUBKEY_FAILED						0x10006007	/*证书提取公钥失败*/
+#define			SENC_ERROR_ECSTATE_CERT_FORMAT_ERROR							0x10006008	/*证书格式错误，解析失败*/
+#define			SENC_ERROR_ECSTATE_CERT_COMMEN_BUFFER_TOO_SMALL					0x10006009	/*证书提取公钥，缓存太小*/
+#define			SENC_ERROR_ECSTATE_MALLOC_FAILED								0x10008001	/*malloc申请空间失败*/
+#define			SENC_ERROR_ECSTATE_GET_RANDOM_FAILED							0x10008002	/*获取随机数失败*/
+#define			SENC_ERROR_ECSTATE_GET_CSR_FAILED								0x10008003	/*获取CSR失败*/
+#define			SENC_ERROR_ECSTATE_RSA_SM2_VERIFY_FAILED						0x10008004	/*验签失败*/
+#define 		SENC_ERROR_ECSTATE_KEY_SM2_GEN_FAILED							0x10009001	/*sm2密钥生成失败*/
+#define 		SENC_ERROR_ECSTATE_KEY_SM2_DEC_FAILED							0x10009002	/*sm2解密失败*/
+#define 		SENC_ERROR_ECSTATE_KEY_SM2_CSR_REQ_FAILED						0x10009003	/*sm2 构建CSR请求信息失败*/
+#define			SENC_ERROR_ECSTATE_KEY_SM2_CSR_CREATE_FAILED					0x10009004	/*sm2 构建CSR失败*/
+#define			SENC_ERROR_ECSTATE_KEY_SM2_DER_SIGN_FAILED						0x10009005	/*sm2解码签名失败*/
+#define			SENC_ERROR_ECSTATE_KEY_SM2_SIGN_FAILED							0x10009006	/*sm2签名失败*/
+#define			SENC_ERROR_ECSTATE_KEY_SM2_VERIFY_FAILED						0x10009007	/*sm2验签失败*/
+#define			SENC_ERROR_ECSTATE_KEY_SM2_GET_DEC_FAILED						0x10009008  /*sm2读取并解密密钥失败*/
+#define			SENC_ERROR_ECSTATE_KEY_SM2_PUB_DER_FAILED						0x10009009	/*sm2公钥der解码失败*/
+#define			SENC_ERROR_ECSTATE_DER_BUFFER_TOO_SMALL							0x1000900a	/*der编解码缓存太小*/
+#define			SENC_ERROR_ECSTATE_KEY_SM2_PRI_DER_FAILED						0x1000900b	/*sm2私钥der解码失败*/	
+#define			SENC_ERROR_ECSTATE_DER_DEC_CIPHER_FAILED						0x1000900c	/*sm2 der解码密文失败*/
+#define			SENC_ERROR_ECSTATE_DER_DEC_SIGN_FAILED							0x1000900d	/*sm2 der解码签名失败*/																							
+#define 		SENC_ERROR_ECSTATE_SM4_ECB_ENC_FAILED							0x10009011	/*sm4ECB加密失败*/
+#define 		SENC_ERROR_ECSTATE_SM4_ECB_DEC_FAILED							0x10009012	/*sm4ECB解密失败*/
+#define 		SENC_ERROR_ECSTATE_SM4_CBC_ENC_FAILED							0x10009013	/*sm4CBC加密失败*/
+#define 		SENC_ERROR_ECSTATE_SM4_CBC_DEC_FAILED							0x10009014	/*sm4CBC解密失败*/
+#define 		SENC_ERROR_ECSTATE_SM4_BUF_LEN_ERROR							0x10009015	/*sm4加解密buf长度错误，要求是16的整数倍*/																						 
+#define			SENC_ERROR_ECSTATE_ENCRYPTOR_KEY_NOT_EXIT						0x1000a001	/*加密机密钥不存在*/
+#define			SENC_ERROR_ECSTATE_ENCRYPTOR_KEY_LEN_ERROR						0x1000a002  /*加密机密钥长度错误*/
+#define			SENC_ERROR_ECSTATE_BINDCODE_CHECK_FAILED						0x1000a003	/*绑定码检查失败*/
+#define			SENC_ERROR_ECSTATE_KEYBAG_PUBKEY_CNT_ERROR						0x1000a004	/*keybag同步公钥数量太多*/
+#define			SENC_ERROR_ECSTATE_KEYBAG_NO_PUBKEY								0x1000a005	/*keybag未找到同步公钥*/
+#define			SENC_ERROR_ECSTATE_PHONENUM_CHECK_ERROR							0x1000a006	/*电话号码检查错误*/
+#define			SENC_ERROR_ECSTATE_TIMESTAMP_CHECK_ERROR						0x1000a007	/*时间戳检查错误*/
+#define			SENC_ERROR_ECSTATE_HASH_INDEX									0x1000F001  /*Hash类型不支持*/																					
+#define			SENC_ERROR_ECSTATE_USERAPI_VERSION_ERROR						0x1000F301	/*版本错误*/
+#define			SENC_ERROR_ECSTATE_USERAPI_KEYFLAG_ERROR						0x1000F302	/*密钥算法，种类错误*/
+#define			SENC_ERROR_ECSTATE_USERAPI_MAC_ERROR							0x1000F303	/*MAC错误*/
+#define			SENC_ERROR_ECSTATE_USERAPI_ID_ERROR								0x1000F304	/*ID错误*/
+#define			SENC_ERROR_ECSTATE_USERAPI_HASH_ERROR							0x1000F305	/*Hash错误*/
+#define			SENC_ERROR_ECSTATE_USERAPI_SIGN_ERROR							0x1000F306	/*签名错误*/
+#define			SENC_ERROR_ECSTATE_USERAPI_TIME_ERROR							0x1000F307	/*时间错误*/
+#define			SENC_ERROR_ECSTATE_USERAPI_LIMITED_TIMES_ERROR					0x1000F308	/*许可条款可用次数错误*/
+#define			SENC_ERROR_ECSTATE_USERAPI_LIMITED_POLICY_ERROR					0x1000F309	/*许可条款策略错误*/
+#define			SENC_ERROR_ECSTATE_USERAPI_GET_RTC_ERROR						0x1000F30A	/*获取RTC时间错误*/
+#define			SENC_ERROR_ECSTATE_USERAPI_PARAMETER_ERROR						0x1000F30B	/*参数错误*/
+#define			SENC_ERROR_ECSTATE_USERAPI_KEYFBITS_CHECK_ERROR					0x1000F30C	/*密钥bit长度错误*/
+
 
 //锁错误 Error Code Generated by Elite4 Dongle
 #define			SENC_ERROR_DONGLE_NO_POWER										0x20000001	/*锁未上电*/
@@ -226,9 +291,12 @@ typedef struct tagSENCryptCardList{
 #define POLICY_UNREVOKABLE  0x00004000         // 不可撤销的
 
 #define	CHIPID_LENGTH		16				   //板卡ID长度
-#define	KEYBAGID_LENGTH		8				   //KeyBag ID长度
+#define	KEYCHAIN_ID_LEN		16				   //KeyBag ID长度
+#define	KEYBAG_ID_LEN		8				   //KeyBag ID长度
 #define	BINDCODE_PLAIN_LEN	16				   //绑定码明文长度
 #define	PHONE_NUMBER_LEN	16				   //手机号码长度
+#define	CIRCLE_ID_LEN		16				   //Circle ID长度
+#define	UUID_LEN			8				   //Circle ID长度
 
 //秘钥记录请求
 typedef struct tagKeyRecordRequest{
@@ -407,104 +475,106 @@ typedef struct tagAdminKeyCopyCommand{
 //KeyChain创建请求包
 typedef struct tagKeychainCreateReq
 {
-	uint32_t u32Magic;					// 魔数，值为0x6b636363，后续数据结构与此相同
-	uint32_t u32Version;				// 版本号，值为0x10000，后续数据结构与此相同
-	uint32_t u32Flags;
-	uint32_t u32TimeStamp;				//时间戳，单位秒
-	uint8_t  au8ID[16];					//KeyChain的ID
-	uint8_t au8KeyBadID[8];				//KeyBagID
-	uint8_t  au8AccessCodePubKey[64];   //SM2公钥，前32个字节为X分量，后32个字节为Y分量
-	uint8_t  au8Signature[256];			//Firmail服务器私钥对以上字段的签名，目前版本使用SM3withSM2签名
+	uint32_t Magic;						// 魔数，值为0x6b636363，后续数据结构与此相同
+	uint32_t Version;					// 版本号，值为0x10000，后续数据结构与此相同
+	uint32_t Flags;						//不是加密算法Flag
+	uint32_t TimeStamp;					//时间戳，单位秒
+	uint8_t  ID[16];					//KeyChain的ID
+	uint8_t  KeyBagID[8];				//KeyBagID
+	uint8_t  AccessCodePubKey[64];		//SM2公钥，前32个字节为X分量，后32个字节为Y分量
+	uint8_t  Signature[256];			//Firmail服务器私钥对以上字段的签名，目前版本使用SM3withSM2签名
 } KeychainCreateReq;
 
 //KeyChain创建码
 typedef struct tagKeychainCreateCode
 {
-	uint32_t u32Magic;					// 魔数，值为0x6b636363，后续数据结构与此相同
-	uint32_t u32Version;				// 版本号，值为0x10000，后续数据结构与此相同
-	uint32_t u32Flags;
-	uint32_t u32TimeStamp;				//时间戳，单位秒
-	uint8_t  au8ID[16];					//KeyChain的ID
-	uint8_t au8KeyBadID[8];				//KeyBagID
-	uint8_t  au8AccessCodePubKey[64];   //SM2公钥，前32个字节为X分量，后32个字节为Y分量
-	uint8_t  au8Signature[256];			//加密机服务器私钥对以上字段的签名，目前版本使用SM3withSM2签名
+	uint32_t Magic;						// 魔数，值为0x6b636363，后续数据结构与此相同
+	uint32_t Version;					// 版本号，值为0x10000，后续数据结构与此相同
+	uint32_t Flags;						//不是加密算法Flag
+	uint32_t TimeStamp;					//时间戳，单位秒
+	uint8_t  ID[16];					//KeyChain的ID
+	uint8_t  KeyBagID[8];				//KeyBagID
+	uint8_t  AccessCodePubKey[64];		//SM2公钥，前32个字节为X分量，后32个字节为Y分量
+	uint8_t  Signature[256];			//加密机服务器私钥对以上字段的签名，目前版本使用SM3withSM2签名
 } KeychainCreateCode;
 
 //绑定验证码
 typedef struct tagKeybagBindCode
 {
-	uint32_t u32Magic;
-	uint32_t u32Version;
-	uint32_t u32Flags;
-	uint32_t u32TimeStamp;
-	uint8_t  au8KeyBagID[8];
-	uint8_t  au8PhoneNumber[16];		//手机号码，如不足16字节，后面以0填充
-	uint8_t  au8BindCode[256];			//使用加密机证书加密的BindCode密文（SM2），其明文为16字节的ASCII字符，若不足16字节后面以0填充
-	uint8_t  au8Signature[256];			//使用KeyBag设备私钥对以上字段的签名（SM3withSM2）
+	uint32_t Magic;						// 魔数，值为0x6b636363，后续数据结构与此相同
+	uint32_t Version;					// 版本号，值为0x10000，后续数据结构与此相同
+	uint32_t Flags;						//不是加密算法Flag
+	uint32_t TimeStamp;
+	uint8_t  KeyBagID[8];
+	uint8_t  PhoneNumber[16];			//手机号码，如不足16字节，后面以0填充
+	uint8_t  BindCode[256];				//使用加密机证书加密的BindCode密文（SM2），其明文为16字节的ASCII字符，若不足16字节后面以0填充
+	uint8_t  Signature[256];			//使用KeyBag设备私钥对以上字段的签名（SM3withSM2）
 } KeybagBindCode;
 
 //绑定验证码校验包
 typedef struct tagKeybagBindCodeVerify
 {
-	uint32_t u32Magic;
-	uint32_t u32Version;
-	uint32_t u32Flags;
-	uint32_t u32TimeStamp;
-	uint8_t  au8KeyBagID[8];
-	uint8_t  au8PhoneNumber[16];		//手机号码，如不足16字节，后面以0填充
-	uint8_t  au8BindCode[16];			//BindCode明文，为16字节的ASCII字符，若不足16字节用0补齐
-	uint8_t  au8Mac[32];				//使用Kmac密钥对以上字段进行HMAC-SM3运算得到的MAC值
+	uint32_t Magic;						// 魔数，值为0x6b636363，后续数据结构与此相同
+	uint32_t Version;					// 版本号，值为0x10000，后续数据结构与此相同
+	uint32_t Flags;						//不是加密算法Flag
+	uint32_t TimeStamp;
+	uint8_t  KeyBagID[8];
+	uint8_t  PhoneNumber[16];			//手机号码，如不足16字节，后面以0填充
+	uint8_t  BindCode[16];				//BindCode明文，为16字节的ASCII字符，若不足16字节用0补齐
+	uint8_t  Mac[32];					//使用Kmac密钥对以上字段进行HMAC-SM3运算得到的MAC值
 } KeybagBindCodeVerify;
 
 //创建Circle请求包
 typedef struct tagKeybagCreateCircleReq
 {
-	uint32_t u32Magic;
-	uint32_t u32Version;
-	uint32_t u32Flags;
-	uint32_t u32TimeStamp;
-	uint8_t  au8KeyBagID[8];
-	uint8_t  au8PhoneNumber[16];		//手机号码，如不足16字节，后面以0填充
-	uint8_t  au8BindCode[256];			//使用加密机证书加密的BindCode密文（SM2），其明文为16字节的ASCII字符，若不足16字节后面以0填充
-	uint8_t  au8SyncPubKey[64];			//同步公钥（SM2），前32个字节为X分量，后32个字节为Y分量
-	uint8_t  au8Signature[64];			//同步私钥对以上字段的签名（SM3withSM2），使用同步公钥验签（即au8SyncPubKey字段）
+	uint32_t Magic;						// 魔数，值为0x6b636363，后续数据结构与此相同
+	uint32_t Version;					// 版本号，值为0x10000，后续数据结构与此相同
+	uint32_t Flags;						//不是加密算法Flag
+	uint32_t TimeStamp;
+	uint8_t  KeyBagID[8];
+	uint8_t  PhoneNumber[16];			//手机号码，如不足16字节，后面以0填充
+	uint8_t  BindCode[256];				//使用加密机证书加密的BindCode密文（SM2），其明文为16字节的ASCII字符，若不足16字节后面以0填充
+	uint8_t  SyncPubKey[64];			//同步公钥（SM2），前32个字节为X分量，后32个字节为Y分量
+	uint8_t  Signature[64];				//同步私钥对以上字段的签名（SM3withSM2），使用同步公钥验签（即au8SyncPubKey字段）
 } KeybagCreateCircleReq;
 
 //Circle数据结构-CirclePubkey
 typedef struct tagKeybagCirclePubkey
 {
-	uint8_t  au8KeyBagID[8];			//KeyBagID
-	uint8_t  au8SyncPubKey[64];			//KeyBag的同步公钥
+	uint8_t  KeyBagSeq;					//加入到Circle中的KeyBag序号，从1开始逐一递增
+	uint8_t  Reserved[7];				//用于数据结构按8字节对齐
+	uint8_t  KeyBagID[8];				//KeyBagID
+	uint8_t  SyncPubKey[64];			//KeyBag的同步公钥
 } KeybagCirclePubkey;
 
 //Circle数据结构-Circle
 typedef struct tagKeybagCircle
 {
-	uint32_t u32Magic;
-	uint32_t u32Version;
-	uint32_t u32Flags;
-	uint32_t u32TimeStamp;
-	uint8_t  au8PhoneNumber[16];		//手机号码，如不足16字节，后面以0填充
-	uint8_t  au8Uuid[16];				//CircleID，绑定第一个keyBag时由加密机内部生成的一个UUID，如果是添加第二个第三个...时，则来自老Circle包中
-	uint32_t u32Count;					//KeyBag同步公钥数组中元素个数
+	uint32_t Magic;						// 魔数，值为0x6b636363，后续数据结构与此相同
+	uint32_t Version;					// 版本号，值为0x10000，后续数据结构与此相同
+	uint32_t Flags;						//不是加密算法Flag
+	uint32_t TimeStamp;
+	uint8_t  PhoneNumber[16];			//手机号码，如不足16字节，后面以0填充
+	uint8_t  Uuid[16];					//CircleID，绑定第一个keyBag时由加密机内部生成的一个UUID，如果是添加第二个第三个...时，则来自老Circle包中
+	uint32_t Count;						//KeyBag同步公钥数组中元素个数
 	KeybagCirclePubkey *kcPubKey;		//KeyBag同步公钥数组，一个Circle里可以有多个KeyBag
-	uint8_t  au8Signature[256];			//加密机服务器私钥对以上字段的签名，目前版本使用SM3withSM2签名
+	uint8_t  Signature[256];			//加密机服务器私钥对以上字段的签名，目前版本使用SM3withSM2签名
 } KeybagCircle;
 
 //加入Circle审批包
 typedef struct tagKeybagJoinCircleApprove
 {
-	uint32_t u32Magic;
-	uint32_t u32Version;
-	uint32_t u32Flags;
-	uint32_t u32TimeStamp;
-	uint8_t  au8KeyBagID[8];
-	uint8_t  au8PhoneNumber[16];
-	uint8_t  au8Uuid[16];				//老Circle的UUID
-	uint8_t  au8BindCode[256];			//使用加密机证书加密的BindCode密文（RSA2048），其明文为16字节的ASCII字符，若不足16字节后面以0填充
-	uint8_t  au8SyncPubKey[64];			//新添加进来的KeyBag的同步公钥（SM2）
-	uint8_t  au8KeyBagIDApporver[8];	//审批的KeyBag的ID，需要通过该ID去老的Circle包中找到公钥来验签
-	uint8_t  au8Signature[64];			//使用审批的KeyBag的同步私钥的签名
+	uint32_t Magic;						// 魔数，值为0x6b636363，后续数据结构与此相同
+	uint32_t Version;					// 版本号，值为0x10000，后续数据结构与此相同
+	uint32_t Flags;						//不是加密算法Flag
+	uint32_t TimeStamp;
+	uint8_t  KeyBagID[8];
+	uint8_t  PhoneNumber[16];
+	uint8_t  Uuid[16];					//老Circle的UUID
+	uint8_t  BindCode[256];				//使用加密机证书加密的BindCode密文（RSA2048），其明文为16字节的ASCII字符，若不足16字节后面以0填充
+	uint8_t  SyncPubKey[64];			//新添加进来的KeyBag的同步公钥（SM2）
+	uint8_t  KeyBagIDApprover[8];		//审批的KeyBag的ID，需要通过该ID去老的Circle包中找到公钥来验签
+	uint8_t  Signature[64];				//使用审批的KeyBag的同步私钥的签名
 } KeybagJoinCircleApprove;
 
 
@@ -1828,6 +1898,7 @@ unsigned int SENC_KeyManager_BindCode(SENCHANDLE IN SencDevHandle,
 
 //创建Circle
 unsigned int SENC_KeyManager_CreateCircle(SENCHANDLE IN SencDevHandle,
+										  uint8_t* IN circle_id,
 										  KeybagCreateCircleReq IN KBCreateCircleReq,
 										  uint32_t IN KBCreateCircleReqLen,
 										  uint8_t* IN BindCodeVrfPkgCipher,

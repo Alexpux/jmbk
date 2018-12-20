@@ -3893,7 +3893,7 @@ unsigned int SENC_CMD_KeyManager_CreateKeyChain(SENCryptCard* IN sencDev,
 	if (!sencDev)
 		return ERROR_LOG(SENC_ERROR_DEVICE_NOT_FOUND, "CMD CreateKeyChain: Device Not Found");
 
-	sendLen = 1 + KCCreateReqLen + CaCertLen + FirmailCertLen + KEYBAGID_LENGTH + 3 * sizeof(uint32_t);
+	sendLen = 1 + KCCreateReqLen + CaCertLen + FirmailCertLen + KEYBAG_ID_LEN + 6;
 	//组包
 	cmdBuf[0] = SENC_CMD_KEY_MANAGEMENT;
 	cmdBuf[1] = sendLen >> 8;
@@ -3906,7 +3906,7 @@ unsigned int SENC_CMD_KeyManager_CreateKeyChain(SENCryptCard* IN sencDev,
 	memcpy(cmdBuf + offset, &KCCreateReq, KCCreateReqLen);
 	offset += KCCreateReqLen;
 	//KeyBag ID
-	memcpy(cmdBuf + offset, KeyBagId, 8);
+	memcpy(cmdBuf + offset, KeyBagId, KEYBAG_ID_LEN);
 	offset += 8;
 	//CA证书长度及内容
 	cmdBuf[offset] = CaCertLen >> 8;
@@ -3964,7 +3964,7 @@ unsigned int SENC_CMD_KeyManager_BindCode(SENCryptCard* IN sencDev,
 	if (!sencDev)
 		return ERROR_LOG(SENC_ERROR_DEVICE_NOT_FOUND, "CMD BindCode: Device Not Found");
 
-	sendLen = 1 + KBBindCodeLen + CaCertLen + KeyBagCertLen  + 3 * sizeof(uint32_t);
+	sendLen = 1 + KBBindCodeLen + CaCertLen + KeyBagCertLen  + 6;
 	//组包
 	cmdBuf[0] = SENC_CMD_KEY_MANAGEMENT;
 	cmdBuf[1] = sendLen >> 8;
@@ -4019,6 +4019,7 @@ unsigned int SENC_CMD_KeyManager_BindCode(SENCryptCard* IN sencDev,
 
 //创建Circle
 unsigned int SENC_CMD_KeyManager_CreateCircle(SENCryptCard* IN sencDev,
+											  uint8_t* IN circle_id,
 											  KeybagCreateCircleReq IN KBCreateCircleReq,
 											  uint32_t IN KBCreateCircleReqLen,
 											  uint8_t* IN BindCodeVrfPkgCipher,
@@ -4038,16 +4039,18 @@ unsigned int SENC_CMD_KeyManager_CreateCircle(SENCryptCard* IN sencDev,
 	if (!sencDev)
 		return ERROR_LOG(SENC_ERROR_DEVICE_NOT_FOUND, "CMD CreateCircle: Device Not Found");
 
-	sendLen = 1 + KBCreateCircleReqLen + BindCodeVrfPkgCipherLen + 2 * sizeof(uint32_t);
+	sendLen = 1 + CIRCLE_ID_LEN + KBCreateCircleReqLen + BindCodeVrfPkgCipherLen + 4;
 	//组包
 	cmdBuf[0] = SENC_CMD_KEY_MANAGEMENT;
 	cmdBuf[1] = sendLen >> 8;
 	cmdBuf[2] = sendLen && 0xff;
 	cmdBuf[3] = KM_CREATE_CIRCLE;
+	memcpy(cmdBuf + 4, circle_id, CIRCLE_ID_LEN);
+	offset = 4 + CIRCLE_ID_LEN;
 	//Circle请求包长度及内容
-	cmdBuf[4] = KBCreateCircleReqLen >> 8;
-	cmdBuf[5] = KBCreateCircleReqLen & 0xff;
-	offset = 6;
+	cmdBuf[offset] = KBCreateCircleReqLen >> 8;
+	cmdBuf[offset + 1] = KBCreateCircleReqLen & 0xff;
+	offset += 2;
 	memcpy(cmdBuf + offset, &KBCreateCircleReq, KBCreateCircleReqLen);
 	offset += KBCreateCircleReqLen;
 	//BindCode校验包密文长度及内容
@@ -4073,7 +4076,13 @@ unsigned int SENC_CMD_KeyManager_CreateCircle(SENCryptCard* IN sencDev,
 		//Circle包长度及内容
 		*KBCircleLen = (revBuf[offset] << 8) + revBuf[offset + 1];
 		offset += 2;
-		memcpy(KBCircle, revBuf + offset, *KBCircleLen);
+		memcpy(KBCircle, revBuf + offset, 22);
+		offset += 22;
+		if (sizeof(KeybagCircle)+KBCircle->Count*sizeof(KeybagCirclePubkey)-sizeof(KBCircle->kcPubKey) > *KBCircleLen)
+			return SENC_ERROR_PARAMETER_LENGTH_ERROR;
+		memcpy(KBCircle->kcPubKey, revBuf + offset, KBCircle->Count*sizeof(KeybagCirclePubkey));
+		offset += KBCircle->Count*sizeof(KeybagCirclePubkey);
+		memcpy(KBCircle->Signature, revBuf + offset, sizeof(KBCircle->Signature));
 	} while (0);
 
 	memset(cmdBuf, 0x00, sizeof(cmdBuf));
@@ -4105,7 +4114,7 @@ unsigned int SENC_CMD_KeyManager_JoinCircle(SENCryptCard* IN sencDev,
 	if (!sencDev)
 		return ERROR_LOG(SENC_ERROR_DEVICE_NOT_FOUND, "CMD JoinCircle: Device Not Found");
 
-	sendLen = 1 + KBOldCircleLen + KBJoinCircleApproveLen + BindCodeVrfPkgCipherLen + 3 * sizeof(uint32_t);
+	sendLen = 1 + KBOldCircleLen + KBJoinCircleApproveLen + BindCodeVrfPkgCipherLen + 6;
 	//组包
 	cmdBuf[0] = SENC_CMD_KEY_MANAGEMENT;
 	cmdBuf[1] = sendLen >> 8;
@@ -4146,7 +4155,13 @@ unsigned int SENC_CMD_KeyManager_JoinCircle(SENCryptCard* IN sencDev,
 		//Circle包长度及内容
 		*KBNewCircleLen = (revBuf[offset] << 8) + revBuf[offset + 1];
 		offset += 2;
-		memcpy(KBNewCircle, revBuf + offset, *KBNewCircleLen);
+		memcpy(KBNewCircle, revBuf + offset, 22);
+		offset += 22;
+		if (sizeof(KeybagCircle)+KBNewCircle->Count*sizeof(KeybagCirclePubkey)-sizeof(KBNewCircle->kcPubKey) > *KBNewCircleLen)
+			return SENC_ERROR_PARAMETER_LENGTH_ERROR;
+		memcpy(KBNewCircle->kcPubKey, revBuf + offset, KBNewCircle->Count*sizeof(KeybagCirclePubkey));
+		offset += KBNewCircle->Count*sizeof(KeybagCirclePubkey);
+		memcpy(KBNewCircle->Signature, revBuf + offset, sizeof(KBNewCircle->Signature));
 	} while (0);
 
 	memset(cmdBuf, 0x00, sizeof(cmdBuf));

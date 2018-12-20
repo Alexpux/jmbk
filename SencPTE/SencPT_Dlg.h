@@ -61,6 +61,6 @@ public:
 	afx_msg void OnBnClickedButtonProduction();
 	afx_msg void OnBnClickedButtonFlashErase();
 	afx_msg void OnBnClickedButtonGetList();
-	afx_msg void OnBnClickedButtonNoneRand();
+	afx_msg void OnBnClickedButtonInit();
 };
 

@@ -85,3 +85,7 @@ EXPORTS
 	SENC_DataProtector_GetInitReq
 	SENC_DataProtector_ChipInit
 	SENC_DataProtector_GetAuthPackage
+	SENC_KeyManager_CreateKeyChain
+	SENC_KeyManager_BindCode
+	SENC_KeyManager_CreateCircle
+	SENC_KeyManager_JoinCircle

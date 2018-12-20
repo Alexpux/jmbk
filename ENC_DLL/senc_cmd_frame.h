@@ -859,6 +859,7 @@ unsigned int SENC_CMD_KeyManager_BindCode(SENCryptCard* IN sencDev,
 
 //´´½¨Circle
 unsigned int SENC_CMD_KeyManager_CreateCircle(SENCryptCard* IN sencDev,
+											  uint8_t* IN circle_id,
 											  KeybagCreateCircleReq IN KBCreateCircleReq,
 											  uint32_t IN KBCreateCircleReqLen,
 											  uint8_t* IN BindCodeVrfPkgCipher,

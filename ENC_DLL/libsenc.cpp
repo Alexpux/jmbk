@@ -2942,6 +2942,7 @@ unsigned int SENC_KeyManager_BindCode(SENCHANDLE IN SencDevHandle,
 
 //创建Circle
 unsigned int SENC_KeyManager_CreateCircle(SENCHANDLE IN SencDevHandle,
+										  uint8_t* IN circle_id,
 										  KeybagCreateCircleReq IN KBCreateCircleReq,
 										  uint32_t IN KBCreateCircleReqLen,
 										  uint8_t* IN BindCodeVrfPkgCipher,
@@ -2962,7 +2963,7 @@ unsigned int SENC_KeyManager_CreateCircle(SENCHANDLE IN SencDevHandle,
 	if (pstEncDev->OpenSign == FALSE)
 		return ERROR_LOG(SENC_ERROR_DEVICE_CLOSED, "SENC_KeyManager_CreateCircle: Device Closed");
 
-	return SENC_CMD_KeyManager_CreateCircle(pstEncDev, KBCreateCircleReq, KBCreateCircleReqLen, BindCodeVrfPkgCipher, BindCodeVrfPkgCipherLen, TimeStamp, KBCircle, KBCircleLen);
+	return SENC_CMD_KeyManager_CreateCircle(pstEncDev, circle_id, KBCreateCircleReq, KBCreateCircleReqLen, BindCodeVrfPkgCipher, BindCodeVrfPkgCipherLen, TimeStamp, KBCircle, KBCircleLen);
 }
 
 //加入Circle
